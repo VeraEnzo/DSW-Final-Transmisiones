@@ -103,4 +103,24 @@ const remove = async (req, res, next) => {
   }
 };
 
-module.exports = { create, getById, update, remove };
+const porEstado = async (req, res, next) => {
+  try {
+    const estado = req.query.estado || 'ingresada';
+    const { rows } = await pool.query(
+      `SELECT r.id, r.estado, r.fecha_ingreso, r.tecnico,
+              c.numero_serie, c.marca, c.modelo,
+              cl.nombre as cliente_nombre
+       FROM reparaciones r
+       JOIN cajas c ON c.id = r.id_caja
+       LEFT JOIN clientes cl ON cl.id = c.id_cliente
+       WHERE r.estado = $1
+       ORDER BY r.created_at DESC`,
+      [estado]
+    );
+    res.json({ ok: true, data: rows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { create, getById, update, remove, porEstado };

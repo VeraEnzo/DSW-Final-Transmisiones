@@ -3,6 +3,66 @@ import api from '../api/axios';
 import Spinner from '../components/Spinner';
 import { useAuth } from '../contexts/AuthContext';
 
+function SolicitudesReset() {
+  const [solicitudes, setSolicitudes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [resetting, setResetting] = useState(null);
+  const [passwordTemporal, setPasswordTemporal] = useState(null);
+
+  useEffect(() => {
+    api.get('/usuarios/solicitudes-reset')
+      .then(({ data }) => setSolicitudes(data.data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleReset = async (id, nombre) => {
+    setResetting(id);
+    try {
+      const { data } = await api.post(`/usuarios/solicitudes-reset/${id}/resetear`);
+      setPasswordTemporal({ nombre, password: data.data.password_temporal });
+      setSolicitudes((prev) => prev.filter((s) => s.id !== id));
+    } finally {
+      setResetting(null); }
+  };
+
+  if (loading) return <Spinner size="sm" className="py-4" />;
+  if (!solicitudes.length && !passwordTemporal) return null;
+
+  return (
+    <div className="card border-yellow-700 space-y-3">
+      <h3 className="font-semibold text-yellow-400 flex items-center gap-2">
+        ⚠ Solicitudes de reset de contraseña ({solicitudes.length})
+      </h3>
+
+      {passwordTemporal && (
+        <div className="bg-emerald-900/30 border border-emerald-700 rounded-lg px-4 py-3 space-y-1">
+          <p className="text-sm text-emerald-400 font-medium">Contraseña reseteada para {passwordTemporal.nombre}</p>
+          <p className="text-xs text-slate-300">Contraseña temporal: <span className="font-mono bg-slate-700 px-2 py-0.5 rounded text-white">{passwordTemporal.password}</span></p>
+          <p className="text-xs text-slate-500">Avisale al usuario por WhatsApp o teléfono.</p>
+          <button className="text-xs text-slate-400 hover:text-slate-200 mt-1" onClick={() => setPasswordTemporal(null)}>Cerrar</button>
+        </div>
+      )}
+
+      {solicitudes.map((s) => (
+        <div key={s.id} className="flex items-center justify-between py-2 border-b border-slate-700 last:border-0">
+          <div>
+            <p className="text-sm font-medium text-slate-200">{s.nombre}</p>
+            <p className="text-xs text-slate-400">{s.email}</p>
+            <p className="text-xs text-slate-500">{new Date(s.created_at).toLocaleString('es-AR')}</p>
+          </div>
+          <button
+            className="btn-primary btn text-xs"
+            onClick={() => handleReset(s.id, s.nombre)}
+            disabled={resetting === s.id}
+          >
+            {resetting === s.id ? <Spinner size="sm" /> : 'Resetear contraseña'}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function UserRow({ user, onUpdate, onDelete, currentUserId }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ nombre: user.nombre, email: user.email, rol: user.rol, password: '' });
@@ -102,6 +162,7 @@ export default function Usuarios() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
+      <SolicitudesReset />
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-100">Usuarios</h2>
         <button className="btn-primary btn text-sm" onClick={() => setCreating(!creating)}>

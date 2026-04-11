@@ -77,3 +77,10 @@ CREATE TABLE IF NOT EXISTS fotos (
 
 CREATE INDEX IF NOT EXISTS idx_cajas_numero_serie ON cajas(numero_serie);
 CREATE INDEX IF NOT EXISTS idx_reparaciones_id_caja ON reparaciones(id_caja);
+
+CREATE TABLE IF NOT EXISTS solicitudes_reset (
+  id SERIAL PRIMARY KEY,
+  id_usuario INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  estado VARCHAR(20) DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'completada')),
+  created_at TIMESTAMP DEFAULT NOW()
+);

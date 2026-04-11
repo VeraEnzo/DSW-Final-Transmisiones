@@ -53,6 +53,31 @@ const register = async (req, res, next) => {
     );
     res.status(201).json({ ok: true, data: rows[0] });
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ ok: false, error: 'Este email ya se encuentra registrado' });
+    }
+    next(err);
+  }
+};
+
+const registerPublic = async (req, res, next) => {
+  try {
+    const schema = z.object({
+      nombre: z.string().min(2),
+      email: z.string().email(),
+      password: z.string().min(6),
+    });
+    const { nombre, email, password } = schema.parse(req.body);
+    const hash = await bcrypt.hash(password, 10);
+    const { rows } = await pool.query(
+      'INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES ($1,$2,$3,$4) RETURNING id, nombre, email, rol',
+      [nombre, email, hash, 'tecnico']
+    );
+    res.status(201).json({ ok: true, data: rows[0] });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ ok: false, error: 'Este email ya se encuentra registrado' });
+    }
     next(err);
   }
 };
@@ -70,4 +95,4 @@ const me = async (req, res, next) => {
   }
 };
 
-module.exports = { login, register, me };
+module.exports = { login, register, registerPublic, me };

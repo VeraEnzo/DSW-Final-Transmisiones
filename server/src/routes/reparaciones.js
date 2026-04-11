@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { create, getById, update, remove } = require('../controllers/reparacionesController');
+const { create, getById, update, remove, porEstado } = require('../controllers/reparacionesController');
 const { addItem: addPresupuesto, updateItem: updatePresupuesto, deleteItem: deletePresupuesto, getPDF } = require('../controllers/presupuestoController');
 const { addItem, updateItem, deleteItem } = require('../controllers/itemsController');
 const { uploadFoto, deleteFoto } = require('../controllers/fotosController');
@@ -9,6 +9,7 @@ router.use(authenticate);
 
 // Reparaciones CRUD
 router.post('/', create);
+router.get('/por-estado', porEstado);
 router.get('/:id', getById);
 router.put('/:id', update);
 router.delete('/:id', requireAdmin, remove);

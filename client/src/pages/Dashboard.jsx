@@ -2,19 +2,15 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import Spinner from '../components/Spinner';
-import BadgeEstado from '../components/BadgeEstado';
 
-function StatCard({ label, count, color, children }) {
-  return (
-    <div className={`card border-l-4 ${color}`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-slate-400">{label}</span>
-        <span className="text-2xl font-bold text-slate-100">{count}</span>
-      </div>
-      {children}
-    </div>
-  );
-}
+const LIMITE = 4;
+
+const SECCIONES = [
+  { key: 'ingresadas',     estado: 'ingresada',     label: 'Sin presupuesto',       dot: 'bg-blue-500',    countKey: 'ingresada' },
+  { key: 'presupuestadas', estado: 'presupuestada', label: 'Esperando aprobación',  dot: 'bg-yellow-500',  countKey: 'presupuestada' },
+  { key: 'aprobadas',      estado: 'aprobada',      label: 'En reparación',         dot: 'bg-orange-500',  countKey: 'aprobada' },
+  { key: 'terminadas',     estado: 'terminada',     label: 'Listas para entregar',  dot: 'bg-emerald-500', countKey: 'terminada' },
+];
 
 function ReparacionRow({ rep }) {
   return (
@@ -29,7 +25,7 @@ function ReparacionRow({ rep }) {
           {rep.cliente_nombre ? ` · ${rep.cliente_nombre}` : ''}
         </p>
       </div>
-      <div className="text-right">
+      <div className="text-right shrink-0 ml-2">
         <p className="text-xs text-slate-500">#{rep.id}</p>
         <p className="text-xs text-slate-500">{rep.tecnico}</p>
       </div>
@@ -37,12 +33,41 @@ function ReparacionRow({ rep }) {
   );
 }
 
-function Section({ title, items, emptyMsg }) {
-  if (!items.length) return null;
+function SeccionCard({ label, dot, estado, count, items }) {
+  const visibles = items.slice(0, LIMITE);
+  const hayMas = count > LIMITE;
+
   return (
-    <div className="space-y-1">
-      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-3 pt-2">{title}</h3>
-      {items.map((r) => <ReparacionRow key={r.id} rep={r} />)}
+    <div className="card flex flex-col gap-1">
+      {/* Título clicable */}
+      <Link
+        to={`/reparaciones/lista?estado=${estado}`}
+        className="flex items-center justify-between group mb-1"
+      >
+        <h3 className="font-semibold text-slate-300 flex items-center gap-2 group-hover:text-sky-400 transition-colors">
+          <span className={`w-2 h-2 rounded-full inline-block ${dot}`} />
+          {label}
+          <span className="text-slate-500 font-normal">({count})</span>
+        </h3>
+        <span className="text-slate-600 group-hover:text-sky-400 transition-colors text-sm">›</span>
+      </Link>
+
+      {/* Filas */}
+      {visibles.length === 0 ? (
+        <p className="text-slate-500 text-sm text-center py-4">Sin entradas</p>
+      ) : (
+        <>
+          {visibles.map((r) => <ReparacionRow key={r.id} rep={r} />)}
+          {hayMas && (
+            <Link
+              to={`/reparaciones/lista?estado=${estado}`}
+              className="text-center text-xs text-sky-400 hover:text-sky-300 transition-colors py-2 border-t border-slate-700 mt-1"
+            >
+              Ver {count - LIMITE} más →
+            </Link>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -58,7 +83,7 @@ export default function Dashboard() {
   if (loading) return <Spinner size="lg" className="py-20" />;
   if (!data) return <p className="text-slate-400 text-center py-20">Error cargando dashboard</p>;
 
-  const { counts, ingresadas, presupuestadas, aprobadas, terminadas } = data;
+  const { counts } = data;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -67,51 +92,34 @@ export default function Dashboard() {
         <Link to="/cajas/nueva" className="btn-primary btn text-sm">+ Nueva caja</Link>
       </div>
 
-      {/* Stat cards */}
+      {/* Stat cards clicables */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Sin presupuesto" count={counts.ingresada} color="border-blue-500" />
-        <StatCard label="Esperando aprobación" count={counts.presupuestada} color="border-yellow-500" />
-        <StatCard label="En reparación" count={counts.aprobada} color="border-orange-500" />
-        <StatCard label="Listas p/ entregar" count={counts.terminada} color="border-emerald-500" />
+        {SECCIONES.map((s) => (
+          <Link
+            key={s.estado}
+            to={`/reparaciones/lista?estado=${s.estado}`}
+            className={`card border-l-4 ${s.dot.replace('bg-', 'border-')} hover:bg-slate-700/50 transition-colors`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-400 leading-tight">{s.label}</span>
+              <span className="text-2xl font-bold text-slate-100">{counts[s.countKey]}</span>
+            </div>
+          </Link>
+        ))}
       </div>
 
-      {/* Lists per state */}
+      {/* Listas por estado */}
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="card space-y-1">
-          <h3 className="font-semibold text-slate-300 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
-            Sin presupuesto ({counts.ingresada})
-          </h3>
-          <Section items={ingresadas} emptyMsg="Sin cajas ingresadas" />
-          {!ingresadas.length && <p className="text-slate-500 text-sm text-center py-4">Sin entradas</p>}
-        </div>
-
-        <div className="card space-y-1">
-          <h3 className="font-semibold text-slate-300 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" />
-            Esperando aprobación ({counts.presupuestada})
-          </h3>
-          <Section items={presupuestadas} emptyMsg="" />
-          {!presupuestadas.length && <p className="text-slate-500 text-sm text-center py-4">Sin entradas</p>}
-        </div>
-
-        <div className="card space-y-1">
-          <h3 className="font-semibold text-slate-300 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-orange-500 inline-block" />
-            En reparación ({counts.aprobada})
-          </h3>
-          <Section items={aprobadas} emptyMsg="" />
-          {!aprobadas.length && <p className="text-slate-500 text-sm text-center py-4">Sin entradas</p>}
-        </div>
-
-        <div className="card space-y-1">
-          <h3 className="font-semibold text-slate-300 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-            Listas para entregar ({counts.terminada})
-          </h3>
-          <Section items={terminadas} emptyMsg="" />
-          {!terminadas.length && <p className="text-slate-500 text-sm text-center py-4">Sin entradas</p>}
-        </div>
+        {SECCIONES.map((s) => (
+          <SeccionCard
+            key={s.estado}
+            label={s.label}
+            dot={s.dot}
+            estado={s.estado}
+            count={counts[s.countKey]}
+            items={data[s.key]}
+          />
+        ))}
       </div>
     </div>
   );

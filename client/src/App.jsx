@@ -11,6 +11,8 @@ import ReparacionDetalle from './pages/ReparacionDetalle';
 import Clientes from './pages/Clientes';
 import ClienteDetalle from './pages/ClienteDetalle';
 import Usuarios from './pages/Usuarios';
+import Perfil from './pages/Perfil';
+import ReparacionesPorEstado from './pages/ReparacionesPorEstado';
 
 function RequireAuth({ children, adminOnly = false }) {
   const { user } = useAuth();
@@ -32,6 +34,8 @@ function AppRoutes() {
       <Route path="/clientes" element={<RequireAuth><Clientes /></RequireAuth>} />
       <Route path="/clientes/:id" element={<RequireAuth><ClienteDetalle /></RequireAuth>} />
       <Route path="/usuarios" element={<RequireAuth adminOnly><Usuarios /></RequireAuth>} />
+      <Route path="/perfil" element={<RequireAuth><Perfil /></RequireAuth>} />
+      <Route path="/reparaciones/lista" element={<RequireAuth><ReparacionesPorEstado /></RequireAuth>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
