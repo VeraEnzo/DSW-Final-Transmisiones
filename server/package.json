@@ -7,9 +7,20 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "test": "jest --runInBand --forceExit"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "setupFiles": ["<rootDir>/tests/jest.setup.env.js"],
+    "moduleNameMapper": {
+      "^@react-pdf/renderer$": "<rootDir>/tests/__mocks__/react-pdf-renderer.js",
+      "^@react-pdf/primitives$": "<rootDir>/tests/__mocks__/react-pdf-primitives.js"
+    }
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.4.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
     "cors": "^2.8.5",
@@ -17,11 +28,14 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "pg": "^8.12.0",
     "pdfkit": "^0.15.0",
+    "pg": "^8.12.0",
+    "react": "^19.2.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.2.2"
   }
 }
