@@ -1,5 +1,7 @@
 -- Cajas Automáticas — PostgreSQL Schema
 
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
 CREATE TABLE IF NOT EXISTS usuarios (
   id SERIAL PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
@@ -15,6 +17,7 @@ CREATE TABLE IF NOT EXISTS clientes (
   empresa VARCHAR(150),
   telefono VARCHAR(30),
   email VARCHAR(150),
+  cuit VARCHAR(20),
   created_at TIMESTAMP DEFAULT NOW()
 );
 

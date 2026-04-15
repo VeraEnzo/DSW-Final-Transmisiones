@@ -2,12 +2,19 @@
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve frontend static build in production
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(__dirname, '../../client/dist');
+  app.use(express.static(clientDist));
+}
 
 app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/dashboard',   require('./routes/dashboard'));
@@ -20,6 +27,12 @@ app.use('/api/fotos',       require('./routes/fotos'));
 app.use('/api/usuarios',    require('./routes/usuarios'));
 
 app.get('/api/health', (req, res) => res.json({ ok: true, status: 'running' }));
+
+// Catch-all: serve React app for any non-API route (needed for client-side routing)
+if (process.env.NODE_ENV === 'production') {
+  const clientDist = path.join(__dirname, '../../client/dist');
+  app.get('*', (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
+}
 
 app.use(errorHandler);
 
