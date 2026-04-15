@@ -60,12 +60,17 @@ export default function ReparacionDetalle() {
   const saveEdit = async () => {
     setSaving(true);
     try {
-      const { data } = await api.put(`/reparaciones/${id}`, editForm);
+      // Convertir strings vacíos a null para que Zod los acepte
+      const payload = Object.fromEntries(
+        Object.entries(editForm).map(([k, v]) => [k, v === '' ? null : v])
+      );
+      const { data } = await api.put(`/reparaciones/${id}`, payload);
       setRep((r) => ({ ...r, ...data.data }));
       setEditing(false);
       showToast('Guardado correctamente');
-    } catch { showToast('Error al guardar'); }
-    finally { setSaving(false); }
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Error al guardar');
+    } finally { setSaving(false); }
   };
 
   const cambiarEstado = async (nuevoEstado) => {
@@ -233,7 +238,12 @@ export default function ReparacionDetalle() {
                   <div className="col-span-full border-t border-slate-700 pt-4">
                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Cliente</p>
                     <div className="grid grid-cols-2 gap-4">
-                      <Field label="Nombre" value={rep.cliente_nombre} />
+                      <div>
+                        <p className="label">Nombre</p>
+                        <Link to={`/clientes/${rep.id_cliente}`} className="text-sky-400 hover:underline text-sm">
+                          {rep.cliente_nombre}
+                        </Link>
+                      </div>
                       {rep.cliente_empresa && <Field label="Empresa" value={rep.cliente_empresa} />}
                       {rep.cliente_telefono && <Field label="Teléfono" value={rep.cliente_telefono} />}
                     </div>

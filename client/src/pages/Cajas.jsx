@@ -1,14 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Spinner from '../components/Spinner';
 import BadgeEstado from '../components/BadgeEstado';
+import ToastContainer from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 function debounce(fn, ms) {
   let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
 }
 
 export default function Cajas() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { toasts, toast } = useToast();
   const [cajas, setCajas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -28,9 +33,18 @@ export default function Cajas() {
   );
 
   useEffect(() => { fetchCajas(search, tipo); }, [search, tipo]);
+  const toastShown = useRef(false);
+  useEffect(() => {
+    if (location.state?.toast && !toastShown.current) {
+      toastShown.current = true;
+      toast.success(location.state.toast);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
+      <ToastContainer toasts={toasts} />
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-100">Cajas</h2>
         <Link to="/cajas/nueva" className="btn-primary btn text-sm">+ Nueva caja</Link>

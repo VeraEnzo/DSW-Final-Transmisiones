@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from '../api/axios';
 import Spinner from './Spinner';
+import ConfirmModal from './ConfirmModal';
 
 function fmtCurrency(val) {
   const n = parseFloat(val) || 0;
@@ -67,7 +68,7 @@ function ItemRow({ item, onUpdate, onDelete }) {
       <td className="table-cell">
         <div className="flex gap-1 justify-end">
           <button className="btn-ghost btn text-xs px-2 py-1" onClick={() => setEditing(true)}>✏</button>
-          <button className="btn-danger btn text-xs px-2 py-1" onClick={() => onDelete(item.id)}>🗑</button>
+          <button className="btn-danger btn text-xs px-2 py-1" onClick={() => onDelete(item.id)}>✕</button>
         </div>
       </td>
     </tr>
@@ -134,6 +135,8 @@ function AddRow({ reparacionId, onAdded }) {
 
 export default function TablaPresupuesto({ reparacionId, items: initialItems, editable = true, onPDF }) {
   const [items, setItems] = useState(initialItems || []);
+  const [confirmId, setConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const total = items.reduce((sum, item) => sum + (parseFloat(item.precio_unitario) || 0) * (item.cantidad || 1), 0);
 
@@ -142,14 +145,27 @@ export default function TablaPresupuesto({ reparacionId, items: initialItems, ed
     setItems((prev) => prev.map((i) => (i.id === id ? res.data : i)));
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('¿Eliminar este ítem?')) return;
-    await api.delete(`/presupuesto/${id}`);
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await api.delete(`/presupuesto/${confirmId}`);
+      setItems((prev) => prev.filter((i) => i.id !== confirmId));
+      setConfirmId(null);
+    } finally { setDeleting(false); }
   };
 
   return (
     <div>
+      {confirmId && (
+        <ConfirmModal
+          title="¿Eliminar ítem?"
+          message="Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmId(null)}
+          loading={deleting}
+        />
+      )}
       <div className="overflow-x-auto rounded-lg border border-slate-700">
         <table className="w-full text-sm">
           <thead>
@@ -164,7 +180,7 @@ export default function TablaPresupuesto({ reparacionId, items: initialItems, ed
           <tbody>
             {items.map((item) => (
               editable
-                ? <ItemRow key={item.id} item={item} onUpdate={handleUpdate} onDelete={handleDelete} />
+                ? <ItemRow key={item.id} item={item} onUpdate={handleUpdate} onDelete={(id) => setConfirmId(id)} />
                 : (
                   <tr key={item.id} className="border-b border-slate-700">
                     <td className="table-cell">{item.descripcion}</td>

@@ -1,18 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Spinner from '../components/Spinner';
+import ToastContainer from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 function debounce(fn, ms) {
   let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
 }
 
 export default function Clientes() {
+  const { toasts, toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ nombre: '', empresa: '', telefono: '', email: '' });
+  const [form, setForm] = useState({ nombre: '', empresa: '', telefono: '', email: '', cuit: '' });
   const [saving, setSaving] = useState(false);
 
   const fetchClientes = useCallback(
@@ -25,6 +30,14 @@ export default function Clientes() {
   );
 
   useEffect(() => { fetchClientes(search); }, [search]);
+  const toastShown = useRef(false);
+  useEffect(() => {
+    if (location.state?.toast && !toastShown.current) {
+      toastShown.current = true;
+      toast.success(location.state.toast);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -33,13 +46,15 @@ export default function Clientes() {
     try {
       const { data } = await api.post('/clientes', form);
       setClientes((p) => [data.data, ...p]);
-      setForm({ nombre: '', empresa: '', telefono: '', email: '' });
+      setForm({ nombre: '', empresa: '', telefono: '', email: '', cuit: '' });
       setCreating(false);
+      toast.success('Cliente creado correctamente');
     } finally { setSaving(false); }
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
+      <ToastContainer toasts={toasts} />
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-100">Clientes</h2>
         <button className="btn-primary btn text-sm" onClick={() => setCreating(!creating)}>
@@ -66,6 +81,16 @@ export default function Clientes() {
             <div>
               <label className="label">Email</label>
               <input className="input" type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} />
+            </div>
+            <div>
+              <label className="label">CUIT</label>
+              <input className="input" placeholder="30-12345678-9" value={form.cuit} onChange={e => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                let formatted = digits;
+                if (digits.length > 2) formatted = digits.slice(0,2) + '-' + digits.slice(2);
+                if (digits.length > 10) formatted = digits.slice(0,2) + '-' + digits.slice(2,10) + '-' + digits.slice(10);
+                setForm(f => ({...f, cuit: formatted}));
+              }} />
             </div>
           </div>
           <button type="submit" className="btn-primary btn" disabled={saving}>

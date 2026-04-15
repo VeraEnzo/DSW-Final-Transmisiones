@@ -108,4 +108,19 @@ const update = async (req, res, next) => {
   }
 };
 
-module.exports = { list, create, getById, getBySerie, update };
+const remove = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const reps = await pool.query('SELECT COUNT(*) FROM reparaciones WHERE id_caja = $1', [id]);
+    if (parseInt(reps.rows[0].count) > 0) {
+      return res.status(409).json({ ok: false, error: 'No se puede eliminar: la caja tiene reparaciones asociadas' });
+    }
+    const { rowCount } = await pool.query('DELETE FROM cajas WHERE id = $1', [id]);
+    if (rowCount === 0) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
+    res.json({ ok: true, data: { deleted: true } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { list, create, getById, getBySerie, update, remove };

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import Spinner from '../components/Spinner';
+import ToastContainer from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 function debounce(fn, ms) {
   let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
@@ -10,6 +12,7 @@ function debounce(fn, ms) {
 export default function CajaNueva() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toasts, toast } = useToast();
 
   const [form, setForm] = useState({
     numero_serie: location.state?.numero_serie || '',
@@ -22,6 +25,7 @@ export default function CajaNueva() {
 
   const [clientes, setClientes] = useState([]);
   const [clienteSearch, setClienteSearch] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
   const [showNewCliente, setShowNewCliente] = useState(false);
   const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', empresa: '', telefono: '', email: '' });
   const [saving, setSaving] = useState(false);
@@ -38,13 +42,25 @@ export default function CajaNueva() {
   useEffect(() => { searchClientes(clienteSearch); }, [clienteSearch]);
   useEffect(() => { searchClientes(''); }, []);
 
+  const selectCliente = (cl) => {
+    setForm(f => ({ ...f, id_cliente: cl.id }));
+    setClienteSearch(cl.nombre + (cl.empresa ? ` (${cl.empresa})` : ''));
+    setShowDropdown(false);
+  };
+
+  const clearCliente = () => {
+    setForm(f => ({ ...f, id_cliente: '' }));
+    setClienteSearch('');
+    setShowDropdown(false);
+  };
+
   const createCliente = async () => {
     if (!nuevoCliente.nombre.trim()) return;
     const { data } = await api.post('/clientes', nuevoCliente);
     setClientes((p) => [data.data, ...p]);
-    setForm((f) => ({ ...f, id_cliente: data.data.id }));
-    setClienteSearch(data.data.nombre);
+    selectCliente(data.data);
     setShowNewCliente(false);
+    toast.success('Cliente creado correctamente');
   };
 
   const handleSubmit = async (e) => {
@@ -55,7 +71,8 @@ export default function CajaNueva() {
     try {
       const payload = { ...form, id_cliente: form.id_cliente ? parseInt(form.id_cliente) : null };
       const { data } = await api.post('/cajas', payload);
-      navigate(`/cajas/${data.data.id}`);
+      toast.success('Caja creada correctamente');
+      setTimeout(() => navigate(`/cajas/${data.data.id}`), 1000);
     } catch (err) {
       setError(err.response?.data?.error || 'Error al crear la caja');
     } finally { setSaving(false); }
@@ -63,6 +80,8 @@ export default function CajaNueva() {
 
   return (
     <div className="max-w-xl mx-auto">
+      <ToastContainer toasts={toasts} />
+
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate(-1)} className="btn-ghost btn text-sm">← Volver</button>
         <h2 className="text-xl font-bold text-slate-100">Nueva Caja</h2>
@@ -124,17 +143,36 @@ export default function CajaNueva() {
             </div>
           ) : (
             <div className="relative">
-              <input className="input" placeholder="Buscar cliente..." value={clienteSearch}
-                onChange={e => { setClienteSearch(e.target.value); setForm(f => ({...f, id_cliente: ''})); }} />
-              {clientes.length > 0 && !form.id_cliente && (
+              <div className="flex gap-2">
+                <input
+                  className="input flex-1"
+                  placeholder="Buscar cliente..."
+                  value={clienteSearch}
+                  onFocus={() => setShowDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                  onChange={e => {
+                    setClienteSearch(e.target.value);
+                    setForm(f => ({ ...f, id_cliente: '' }));
+                    setShowDropdown(true);
+                  }}
+                />
+                {form.id_cliente && (
+                  <button type="button" onClick={clearCliente}
+                    className="px-3 text-slate-400 hover:text-slate-200 bg-slate-700 rounded-lg border border-slate-600 text-sm">
+                    ✕
+                  </button>
+                )}
+              </div>
+              {showDropdown && clientes.length > 0 && (
                 <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-48 overflow-y-auto">
-                  <button type="button" className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:bg-slate-700"
-                    onClick={() => { setClienteSearch(''); setForm(f => ({...f, id_cliente: ''})); }}>
+                  <button type="button"
+                    onMouseDown={clearCliente}
+                    className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:bg-slate-700">
                     Sin cliente
                   </button>
                   {clientes.map((cl) => (
                     <button key={cl.id} type="button"
-                      onMouseDown={() => { setForm(f => ({...f, id_cliente: cl.id})); setClienteSearch(cl.nombre + (cl.empresa ? ` (${cl.empresa})` : '')); }}
+                      onMouseDown={() => selectCliente(cl)}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-slate-700 border-t border-slate-700">
                       <span className="text-slate-200">{cl.nombre}</span>
                       {cl.empresa && <span className="text-slate-400 ml-1">· {cl.empresa}</span>}

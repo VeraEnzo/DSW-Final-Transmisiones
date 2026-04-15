@@ -5,10 +5,11 @@ import Spinner from '../components/Spinner';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function ReparacionNueva() {
-  const { id } = useParams();
+  const { id } = useParams(); // id de la caja
   const navigate = useNavigate();
   const { user } = useAuth();
   const [caja, setCaja] = useState(null);
+  const [tecnicos, setTecnicos] = useState([]);
   const [form, setForm] = useState({
     fecha_ingreso: new Date().toISOString().split('T')[0],
     tecnico: user?.nombre || '',
@@ -19,6 +20,7 @@ export default function ReparacionNueva() {
 
   useEffect(() => {
     api.get(`/cajas/${id}`).then(({ data }) => setCaja(data.data));
+    api.get('/usuarios').then(({ data }) => setTecnicos(data.data)).catch(() => {});
   }, [id]);
 
   const handleSubmit = async (e) => {
@@ -26,8 +28,8 @@ export default function ReparacionNueva() {
     setSaving(true);
     setError('');
     try {
-      const { data } = await api.post('/reparaciones', { ...form, id_caja: parseInt(id) });
-      navigate(`/reparaciones/${data.data.id}`);
+      await api.post('/reparaciones', { ...form, id_caja: parseInt(id) });
+      navigate(`/cajas/${id}`, { state: { toast: 'Reparación creada correctamente' } });
     } catch (err) {
       setError(err.response?.data?.error || 'Error al crear la reparación');
     } finally { setSaving(false); }
@@ -36,7 +38,7 @@ export default function ReparacionNueva() {
   return (
     <div className="max-w-xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="btn-ghost btn text-sm">← Volver</button>
+        <button onClick={() => navigate(`/cajas/${id}`)} className="btn-ghost btn text-sm">← Volver</button>
         <div>
           <h2 className="text-xl font-bold text-slate-100">Nueva Reparación</h2>
           {caja && <p className="text-sm text-sky-400 font-mono">{caja.numero_serie}</p>}
@@ -52,8 +54,19 @@ export default function ReparacionNueva() {
 
         <div>
           <label className="label">Técnico a cargo</label>
-          <input className="input" placeholder="Nombre del técnico" value={form.tecnico}
-            onChange={e => setForm(f => ({...f, tecnico: e.target.value}))} />
+          {tecnicos.length > 0 ? (
+            <select className="input" value={form.tecnico}
+              onChange={e => setForm(f => ({...f, tecnico: e.target.value}))}>
+              <option value="">— Sin asignar —</option>
+              {tecnicos.map(t => (
+                <option key={t.id} value={t.nombre}>{t.nombre}</option>
+              ))}
+            </select>
+          ) : (
+            <input className="input" placeholder="Nombre del técnico" value={form.tecnico}
+              onChange={e => setForm(f => ({...f, tecnico: e.target.value}))}
+              readOnly />
+          )}
         </div>
 
         <div>
@@ -69,7 +82,7 @@ export default function ReparacionNueva() {
           <button type="submit" className="btn-primary btn flex-1" disabled={saving}>
             {saving ? <><Spinner size="sm" /> Creando...</> : 'Iniciar reparación'}
           </button>
-          <button type="button" className="btn-secondary btn" onClick={() => navigate(-1)}>
+          <button type="button" className="btn-secondary btn" onClick={() => navigate(`/cajas/${id}`)}>
             Cancelar
           </button>
         </div>

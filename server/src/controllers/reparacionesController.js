@@ -38,7 +38,7 @@ const getById = async (req, res, next) => {
     const rep = await pool.query(
       `SELECT r.*,
               c.numero_serie, c.tipo_vehiculo, c.marca, c.modelo,
-              cl.nombre as cliente_nombre, cl.empresa as cliente_empresa,
+              cl.id as id_cliente, cl.nombre as cliente_nombre, cl.empresa as cliente_empresa,
               cl.telefono as cliente_telefono, cl.email as cliente_email
        FROM reparaciones r
        JOIN cajas c ON c.id = r.id_caja

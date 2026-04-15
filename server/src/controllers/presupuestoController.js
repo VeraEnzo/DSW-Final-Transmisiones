@@ -64,7 +64,7 @@ const getPDF = async (req, res, next) => {
       `SELECT r.*,
               c.numero_serie, c.tipo_vehiculo, c.marca, c.modelo,
               cl.nombre as cliente_nombre, cl.empresa as cliente_empresa,
-              cl.telefono as cliente_telefono
+              cl.telefono as cliente_telefono, cl.cuit as cliente_cuit
        FROM reparaciones r
        JOIN cajas c ON c.id = r.id_caja
        LEFT JOIN clientes cl ON cl.id = c.id_cliente
@@ -80,7 +80,7 @@ const getPDF = async (req, res, next) => {
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=presupuesto-${id}.pdf`);
-    generatePresupuestoPDF(rep.rows[0], items.rows, res);
+    await generatePresupuestoPDF(rep.rows[0], items.rows, res);
   } catch (err) {
     next(err);
   }

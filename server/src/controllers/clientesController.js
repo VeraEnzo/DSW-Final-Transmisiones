@@ -6,6 +6,7 @@ const clienteSchema = z.object({
   empresa: z.string().optional().nullable(),
   telefono: z.string().optional().nullable(),
   email: z.string().email().optional().nullable().or(z.literal('')),
+  cuit: z.string().optional().nullable(),
 });
 
 const list = async (req, res, next) => {
@@ -14,7 +15,7 @@ const list = async (req, res, next) => {
     let query = 'SELECT * FROM clientes';
     const params = [];
     if (search) {
-      query += ' WHERE nombre ILIKE $1 OR empresa ILIKE $1';
+      query += ` WHERE unaccent(nombre) ILIKE unaccent($1) OR unaccent(empresa) ILIKE unaccent($1)`;
       params.push(`%${search}%`);
     }
     query += ' ORDER BY nombre';
@@ -29,8 +30,8 @@ const create = async (req, res, next) => {
   try {
     const data = clienteSchema.parse(req.body);
     const { rows } = await pool.query(
-      'INSERT INTO clientes (nombre, empresa, telefono, email) VALUES ($1,$2,$3,$4) RETURNING *',
-      [data.nombre, data.empresa || null, data.telefono || null, data.email || null]
+      'INSERT INTO clientes (nombre, empresa, telefono, email, cuit) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+      [data.nombre, data.empresa || null, data.telefono || null, data.email || null, data.cuit || null]
     );
     res.status(201).json({ ok: true, data: rows[0] });
   } catch (err) {
@@ -80,4 +81,19 @@ const update = async (req, res, next) => {
   }
 };
 
-module.exports = { list, create, getById, update };
+const remove = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const cajas = await pool.query('SELECT COUNT(*) FROM cajas WHERE id_cliente = $1', [id]);
+    if (parseInt(cajas.rows[0].count) > 0) {
+      return res.status(409).json({ ok: false, error: 'No se puede eliminar: el cliente tiene cajas asociadas' });
+    }
+    const { rowCount } = await pool.query('DELETE FROM clientes WHERE id = $1', [id]);
+    if (rowCount === 0) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
+    res.json({ ok: true, data: { deleted: true } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { list, create, getById, update, remove };

@@ -3,20 +3,28 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Spinner from '../components/Spinner';
 import BadgeEstado from '../components/BadgeEstado';
+import ConfirmModal from '../components/ConfirmModal';
+import ToastContainer from '../components/Toast';
+import { useToast } from '../hooks/useToast';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function ClienteDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
+  const { toasts, toast } = useToast();
   const [cliente, setCliente] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     api.get(`/clientes/${id}`).then(({ data }) => {
       setCliente(data.data);
-      setForm({ nombre: data.data.nombre, empresa: data.data.empresa || '', telefono: data.data.telefono || '', email: data.data.email || '' });
+      setForm({ nombre: data.data.nombre, empresa: data.data.empresa || '', telefono: data.data.telefono || '', email: data.data.email || '', cuit: data.data.cuit || '' });
     }).finally(() => setLoading(false));
   }, [id]);
 
@@ -26,7 +34,21 @@ export default function ClienteDetalle() {
       const { data } = await api.put(`/clientes/${id}`, form);
       setCliente((c) => ({ ...c, ...data.data }));
       setEditing(false);
+      toast.success('Cliente actualizado correctamente');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al guardar');
     } finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await api.delete(`/clientes/${id}`);
+      navigate('/clientes', { replace: true, state: { toast: 'Cliente eliminado correctamente' } });
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error al eliminar');
+      setConfirmDelete(false);
+    } finally { setDeleting(false); }
   };
 
   if (loading) return <Spinner size="lg" className="py-20" />;
@@ -34,10 +56,25 @@ export default function ClienteDetalle() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
+      <ToastContainer toasts={toasts} />
+      {confirmDelete && (
+        <ConfirmModal
+          title={`¿Eliminar cliente "${cliente.nombre}"?`}
+          message="Esta acción no se puede deshacer. Solo es posible si el cliente no tiene cajas asociadas."
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDelete(false)}
+          loading={deleting}
+        />
+      )}
+      <div className="flex items-center gap-3 flex-wrap">
         <button onClick={() => navigate(-1)} className="btn-ghost btn text-sm">← Volver</button>
         <h2 className="text-xl font-bold text-slate-100 flex-1">{cliente.nombre}</h2>
         {!editing && <button className="btn-secondary btn text-sm" onClick={() => setEditing(true)}>✏ Editar</button>}
+        {!editing && isAdmin && (
+          <button className="btn text-sm bg-red-700 hover:bg-red-600 text-white" onClick={() => setConfirmDelete(true)}>
+            Eliminar
+          </button>
+        )}
       </div>
 
       <div className="card space-y-4">
@@ -59,6 +96,16 @@ export default function ClienteDetalle() {
               <div>
                 <label className="label">Email</label>
                 <input className="input" type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} />
+              </div>
+              <div>
+                <label className="label">CUIT</label>
+                <input className="input" placeholder="30-12345678-9" value={form.cuit} onChange={e => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  let formatted = digits;
+                  if (digits.length > 2) formatted = digits.slice(0,2) + '-' + digits.slice(2);
+                  if (digits.length > 10) formatted = digits.slice(0,2) + '-' + digits.slice(2,10) + '-' + digits.slice(10);
+                  setForm(f => ({...f, cuit: formatted}));
+                }} />
               </div>
             </div>
             <div className="flex gap-2">
@@ -85,6 +132,10 @@ export default function ClienteDetalle() {
             {cliente.email && <div>
               <p className="label">Email</p>
               <p className="text-slate-200">{cliente.email}</p>
+            </div>}
+            {cliente.cuit && <div>
+              <p className="label">CUIT</p>
+              <p className="text-slate-200">{cliente.cuit}</p>
             </div>}
           </div>
         )}
