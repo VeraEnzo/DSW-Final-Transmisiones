@@ -123,6 +123,7 @@ export default function CajaDetalle() {
                   <option value="camion">Camión</option>
                   <option value="colectivo">Colectivo</option>
                   <option value="tractor">Tractor</option>
+                  <option value="pulverizadora">Pulverizadora</option>
                   <option value="otro">Otro</option>
                 </select>
               </div>

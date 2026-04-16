@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS clientes (
 CREATE TABLE IF NOT EXISTS cajas (
   id SERIAL PRIMARY KEY,
   numero_serie VARCHAR(100) UNIQUE NOT NULL,
-  tipo_vehiculo VARCHAR(30) CHECK (tipo_vehiculo IN ('camion','colectivo','tractor','otro')),
+  tipo_vehiculo VARCHAR(30) CHECK (tipo_vehiculo IN ('camion','colectivo','tractor','pulverizadora','otro')),
   marca VARCHAR(100),
   modelo VARCHAR(100),
   id_cliente INTEGER REFERENCES clientes(id),

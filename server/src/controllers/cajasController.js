@@ -3,7 +3,7 @@ const pool = require('../config/db');
 
 const cajaSchema = z.object({
   numero_serie: z.string().min(1),
-  tipo_vehiculo: z.enum(['camion', 'colectivo', 'tractor', 'otro']).optional().nullable(),
+  tipo_vehiculo: z.enum(['camion', 'colectivo', 'tractor', 'pulverizadora', 'otro']).optional().nullable(),
   marca: z.string().optional().nullable(),
   modelo: z.string().optional().nullable(),
   id_cliente: z.number().int().optional().nullable(),
