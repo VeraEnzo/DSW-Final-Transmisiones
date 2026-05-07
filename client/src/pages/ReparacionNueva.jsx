@@ -47,15 +47,15 @@ export default function ReparacionNueva() {
 
       <form onSubmit={handleSubmit} className="card space-y-4">
         <div>
-          <label className="label">Fecha de ingreso</label>
-          <input type="date" className="input" value={form.fecha_ingreso}
+          <label className="label" htmlFor="fecha_ingreso">Fecha de ingreso</label>
+          <input id="fecha_ingreso" type="date" className="input" value={form.fecha_ingreso}
             onChange={e => setForm(f => ({...f, fecha_ingreso: e.target.value}))} required />
         </div>
 
         <div>
-          <label className="label">Técnico a cargo</label>
+          <label className="label" htmlFor="tecnico">Técnico a cargo</label>
           {tecnicos.length > 0 ? (
-            <select className="input" value={form.tecnico}
+            <select id="tecnico" className="input" value={form.tecnico}
               onChange={e => setForm(f => ({...f, tecnico: e.target.value}))}>
               <option value="">— Sin asignar —</option>
               {tecnicos.map(t => (
@@ -63,15 +63,15 @@ export default function ReparacionNueva() {
               ))}
             </select>
           ) : (
-            <input className="input" placeholder="Nombre del técnico" value={form.tecnico}
+            <input id="tecnico" className="input" placeholder="Nombre del técnico" value={form.tecnico}
               onChange={e => setForm(f => ({...f, tecnico: e.target.value}))}
               readOnly />
           )}
         </div>
 
         <div>
-          <label className="label">Falla declarada por el cliente</label>
-          <textarea className="input min-h-[100px] resize-none" placeholder="Descripción del problema según el cliente..."
+          <label className="label" htmlFor="falla_declarada">Falla declarada por el cliente</label>
+          <textarea id="falla_declarada" className="input min-h-[100px] resize-none" placeholder="Descripción del problema según el cliente..."
             value={form.falla_declarada}
             onChange={e => setForm(f => ({...f, falla_declarada: e.target.value}))} />
         </div>
