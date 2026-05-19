@@ -1,6 +1,6 @@
 # Cajas Automáticas — Sistema de Gestión de Reparaciones
 
-Aplicación web PWA para gestionar reparaciones de cajas automáticas de vehículos pesados (camiones, colectivos, tractores). Permite llevar el control completo del taller: clientes, cajas, reparaciones, presupuestos en PDF y fotos.
+Aplicación web PWA para gestionar reparaciones de cajas automáticas de vehículos pesados (camiones, colectivos, tractores). Permite llevar el control completo del taller: clientes, cajas, reparaciones, presupuestos en PDF y fotos. Realizado para el examen final de la materia **Desarrollo de Software - UTN FRRO**.
 
 ---
 
@@ -13,7 +13,7 @@ Aplicación web PWA para gestionar reparaciones de cajas automáticas de vehícu
 | UI | Tailwind CSS + componentes propios |
 | Auth | JWT (JSON Web Tokens) |
 | Backend | Node.js + Express 4 |
-| DB | PostgreSQL 18 |
+| DB | PostgreSQL |
 | Storage | Cloudinary (fotos en la nube) |
 | PDF | PDFKit |
 | PWA | vite-plugin-pwa + Workbox |
@@ -23,33 +23,33 @@ Aplicación web PWA para gestionar reparaciones de cajas automáticas de vehícu
 
 ## Funcionalidades
 
-- Registro de clientes y cajas con historial completo de reparaciones
-- Flujo de estados: `ingresada → presupuestada → aprobada → terminada → entregada`
-- Presupuestos con generación de PDF
-- Registro de trabajos realizados
-- Galería de fotos por reparación (con cámara desde el celular)
-- Dashboard con resumen por estado
-- Roles: administrador y técnico
-- Instalable como app desde el navegador (PWA)
+- Registro de clientes y cajas con historial completo de reparaciones.
+- Flujo de estados dinámico: `ingresada → presupuestada → aprobada → terminada → entregada`.
+- Presupuestos detallados con generación de PDF "al vuelo".
+- Registro de trabajos realizados y repuestos utilizados.
+- Galería de fotos por reparación con integración a la cámara del dispositivo móvil.
+- Dashboard estadístico con resumen de órdenes por estado.
+- Control de acceso por Roles: Autorización diferenciada para Administrador y Técnico.
+- Soporte PWA: Instalable como aplicación nativa desde el navegador.
 
 ---
 
-## Estructura del proyecto
+## Estructura del Proyecto
 
-```
+```text
 /
-├── client/          # Frontend React + Vite
-└── server/          # Backend Node.js + Express
+├── client/          # Frontend (React + Vite)
+└── server/          # Backend (Node.js + Express)
 ```
 
 ---
 
-## Correr localmente
+## Correr Localmente
 
 ### Requisitos
 - Node.js 18+
 - PostgreSQL
-- Cuenta en Cloudinary (gratuita)
+- Cuenta activa en Cloudinary (Configuración gratuita)
 
 ### 1. Instalar dependencias
 
@@ -63,7 +63,7 @@ npm install
 
 ### 2. Configurar variables de entorno
 
-Copiá `server/.env.example` a `server/.env` y completá los valores:
+Copiá el archivo `server/.env.example` a `server/.env` y completá los valores correspondientes:
 
 ```env
 PORT=3001
@@ -76,44 +76,72 @@ CLOUDINARY_API_SECRET=tu_api_secret
 
 ### 3. Crear la base de datos
 
-En psql:
+Desde tu cliente de PostgreSQL (ej. psql o pgAdmin):
 ```sql
 CREATE DATABASE cajas_automaticas;
 ```
 
-### 4. Cargar datos iniciales
+### 4. Cargar datos iniciales (Seed)
 
 ```bash
 cd server
 node seed.js
 ```
 
-Usuarios creados:
+**Credenciales de prueba generadas:**
 | Email | Contraseña | Rol |
 |---|---|---|
-| admin@taller.com | admin1234 | Admin |
-| tecnico@taller.com | tecnico1234 | Técnico |
-| ana@taller.com | ana1234 | Técnico |
-| cinthia@taller.com | cinthia1234 | Técnico |
+| `admin@taller.com` | `admin1234` | Admin |
+| `tecnico@taller.com` | `tecnico1234` | Técnico |
 
 ### 5. Levantar la aplicación
 
-Terminal 1 — servidor:
+**Terminal 1 (Servidor API):**
 ```bash
 cd server
 npm run dev
 ```
 
-Terminal 2 — cliente:
+**Terminal 2 (Frontend React):**
 ```bash
 cd client
 npm run dev
 ```
+Abrí `http://localhost:5173` en tu navegador.
 
-Abrí `http://localhost:5173` en el navegador.
+---
+
+## 🧪 Pruebas Automatizadas (Testing)
+
+El proyecto cuenta con una estrategia de pruebas que cubre tanto la lógica de negocio en el backend como la interfaz de usuario.
+
+### Backend (Tests de Integración)
+Pruebas sobre endpoints y persistencia utilizando **Check/Jest** y **Supertest**.
+```bash
+cd server
+npm test
+```
+
+### Frontend (Tests Unitarios y E2E)
+* **Tests Unitarios (Vitest + RTL):** Validación de componentes y formularios críticos de manera aislada.
+* **Tests End-to-End (Cypress):** Simulación de flujos de usuario completos (como el ciclo de autenticación).
+```bash
+cd client
+npm run test          # Para correr Vitest
+npm run cypress:open  # Para abrir la interfaz de Cypress
+```
+
+---
+
+## 📄 Documentación Adicional
+
+Para conocer en detalle el diseño técnico y los reportes de calidad, revisá los siguientes documentos adjuntos en la raíz:
+
+* [**Documentación de la API (Backend)**](./api-docs.md): Detalle de endpoints, métodos HTTP, parámetros requeridos y estructuras de respuestas JSON.
+* [**Reporte de Tests (Frontend)**](./tests-frontend.md): Casos de prueba detallados y evidencias de ejecución para Vitest y Cypress.
 
 ---
 
 ## Deploy
 
-El proyecto está configurado para deployar en **Railway**. Conectar el repositorio de GitHub y configurar las variables de entorno en el panel de Railway.
+El proyecto está preparado para ser desplegado de forma continua en **Railway**. Basta con vincular el repositorio de GitHub y setear las mismas variables de entorno del archivo `.env` en el panel de control de Railway.
