@@ -17,7 +17,7 @@ Aplicación web PWA para gestionar reparaciones de cajas automáticas de vehícu
 | Storage | Cloudinary (fotos en la nube) |
 | PDF | PDFKit |
 | PWA | vite-plugin-pwa + Workbox |
-| Deploy | Railway |
+| Deploy | Vercel + Render + Neon |
 
 ---
 
@@ -143,6 +143,8 @@ Para conocer en detalle el diseño técnico y los reportes de calidad, revisá l
 ---
 
 ## Deploy
+
+**Aplicación en producción:** [https://dsw-final-transmisiones.vercel.app](https://dsw-final-transmisiones.vercel.app)
 
 El proyecto usa una arquitectura **multicloud gratuita e indefinida** con tres servicios separados:
 
