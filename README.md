@@ -144,4 +144,28 @@ Para conocer en detalle el diseño técnico y los reportes de calidad, revisá l
 
 ## Deploy
 
-El proyecto está preparado para ser desplegado de forma continua en **Railway**. Basta con vincular el repositorio de GitHub y setear las mismas variables de entorno del archivo `.env` en el panel de control de Railway.
+El proyecto usa una arquitectura **multicloud gratuita e indefinida** con tres servicios separados:
+
+| Capa | Plataforma | Plan |
+|---|---|---|
+| Frontend (React/Vite) | [Vercel](https://vercel.com) | Free — estático CDN |
+| Backend (Express/Node) | [Render](https://render.com) | Free — 750hs/mes |
+| Base de datos (PostgreSQL) | [Neon](https://neon.tech) | Free — 0.5 GB |
+
+### Variables de entorno requeridas
+
+**Render (Backend):**
+```
+DATABASE_URL        → Connection string SSL de Neon
+JWT_SECRET          → Clave segura (mín. 32 caracteres)
+CORS_ORIGIN         → URL del frontend en Vercel (ej: https://tu-app.vercel.app)
+CLOUDINARY_CLOUD_NAME
+CLOUDINARY_API_KEY
+CLOUDINARY_API_SECRET
+NODE_ENV            → production
+```
+
+**Vercel (Frontend):**
+```
+VITE_API_URL  → URL del backend en Render + /api (ej: https://tu-backend.onrender.com/api)
+```
