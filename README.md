@@ -137,8 +137,9 @@ npm run cypress:open  # Para abrir la interfaz de Cypress
 
 Para conocer en detalle el diseño técnico y los reportes de calidad, revisá los siguientes documentos adjuntos en la raíz:
 
-* [**Documentación de la API (Backend)**](./api-docs.md): Detalle de endpoints, métodos HTTP, parámetros requeridos y estructuras de respuestas JSON.
-* [**Reporte de Tests (Frontend)**](./tests-frontend.md): Casos de prueba detallados y evidencias de ejecución para Vitest y Cypress.
+* [**Documentación de la API (Backend)**](./docs/api-docs.md): Detalle de endpoints, métodos HTTP, parámetros requeridos y estructuras de respuestas JSON.
+* [**Reporte de Tests (Frontend)**](./docs/tests-frontend.md): Casos de prueba detallados y evidencias de ejecución para Vitest y Cypress.
+* [**Índice completo de documentación**](./docs/README.md): Propuesta, actas de avance, manual de usuario y más.
 
 ---
 
