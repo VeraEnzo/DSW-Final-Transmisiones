@@ -1,6 +1,16 @@
 'use strict';
 
 require('dotenv').config();
+
+// @react-pdf/renderer es ESM-only y pdf.js lo carga con import() dinámico, que
+// Jest no intercepta vía moduleNameMapper. Mockeamos el generador para que
+// escriba un Buffer PDF válido al stream, igual que el real, sin cargar el ESM.
+jest.mock('../src/utils/pdf', () => ({
+  generatePresupuestoPDF: jest.fn(async (reparacion, items, outputStream) => {
+    outputStream.end(Buffer.from('%PDF-1.4 stub'));
+  }),
+}));
+
 const request = require('supertest');
 const app = require('../src/app');
 const { cleanDB, pool, createAdminAndLogin, createTecnicoAndLogin } = require('./setup');
