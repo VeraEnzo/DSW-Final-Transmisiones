@@ -1,0 +1,722 @@
+<title>Guion del Video — Cajas Automáticas</title>
+<meta name="description" content="Guion escena por escena para grabar el video de la entrega final del sistema de gestión de cajas automáticas.">
+<style>
+  :root {
+    --paper: #f4f6f8;
+    --paper-raised: #ffffff;
+    --ink: #1a2230;
+    --ink-soft: #4a5566;
+    --ink-faint: #8a94a3;
+    --line: #dde3ea;
+    --accent: #0f6fb5;
+    --accent-soft: #e7f1f9;
+    --amber: #9a6510;
+    --amber-soft: #faf0db;
+    --green: #3f7d4e;
+    --green-soft: #e8f2ea;
+    --shadow: 0 1px 2px rgba(26,34,48,.05), 0 4px 16px rgba(26,34,48,.06);
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 50rem;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 4rem) clamp(1rem, 4vw, 2rem) 5rem;
+  }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .eyebrow {
+    font-size: .72rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+    margin: 0 0 .6rem;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 5vw, 2.9rem);
+    line-height: 1.08;
+    letter-spacing: -.02em;
+    text-wrap: balance;
+    margin: 0 0 .5rem;
+    font-weight: 800;
+  }
+  .sub {
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+    margin: 0;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.5rem;
+    margin-top: 1.2rem;
+    font-size: .85rem;
+    color: var(--ink-faint);
+  }
+  .meta-row b { color: var(--ink-soft); font-weight: 600; }
+
+  /* ---- Callout (objetivo) ---- */
+  .callout {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem;
+    margin: 0 0 2.5rem;
+    font-size: .94rem;
+  }
+  .callout p { margin: 0; color: var(--ink-soft); }
+  .callout b { color: var(--ink); }
+
+  /* ---- Section heading ---- */
+  .sec-label {
+    font-size: .72rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+    margin: 2.5rem 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+  .sec-label::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ---- Checklist grid ---- */
+  .check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: .5rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+  }
+  .check-grid li {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: .6rem .8rem .6rem 2.1rem;
+    font-size: .85rem;
+    color: var(--ink-soft);
+    position: relative;
+    box-shadow: var(--shadow);
+  }
+  .check-grid li::before {
+    content: "";
+    position: absolute;
+    left: .7rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: .85rem;
+    height: .85rem;
+    border: 1.5px solid var(--accent);
+    border-radius: 3px;
+  }
+
+  /* ---- Prep list ---- */
+  ol.prep, ul.notes {
+    padding-left: 0;
+    margin: 0 0 1rem;
+    list-style: none;
+    counter-reset: prep;
+  }
+  ol.prep li {
+    position: relative;
+    padding: .35rem 0 .35rem 2.2rem;
+    counter-increment: prep;
+    border-bottom: 1px solid var(--line);
+    font-size: .95rem;
+  }
+  ol.prep li:last-child { border-bottom: 0; }
+  ol.prep li::before {
+    content: counter(prep);
+    position: absolute;
+    left: 0; top: .4rem;
+    width: 1.5rem; height: 1.5rem;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 50%;
+    font-size: .8rem;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+  ul.notes li {
+    position: relative;
+    padding: .4rem 0 .4rem 1.4rem;
+    font-size: .92rem;
+    color: var(--ink-soft);
+  }
+  ul.notes li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  ul.notes b { color: var(--ink); }
+
+  /* ---- Scene card ---- */
+  .scene {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .scene.key { border-color: var(--amber); border-width: 1.5px; }
+  .scene-head {
+    display: flex;
+    align-items: baseline;
+    gap: .9rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .scene-num {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .scene-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    margin: 0;
+    flex: 1;
+    min-width: 12rem;
+  }
+  .dur {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    padding: .15rem .65rem;
+    white-space: nowrap;
+  }
+  .pill-key {
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--amber);
+    background: var(--amber-soft);
+    border-radius: 99px;
+    padding: .2rem .6rem;
+  }
+
+  /* ---- Show / Say blocks ---- */
+  .block {
+    border-radius: 8px;
+    padding: .85rem 1rem;
+    margin-top: .75rem;
+    font-size: .93rem;
+  }
+  .block-show { background: var(--accent-soft); }
+  .block-say  { background: var(--green-soft); }
+  .block-label {
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin-bottom: .35rem;
+  }
+  .block-show .block-label { color: var(--accent); }
+  .block-say  .block-label { color: var(--green); }
+  .block p { margin: .3rem 0; }
+  .block p:first-of-type { margin-top: 0; }
+  .block p:last-child { margin-bottom: 0; }
+  .say-quote {
+    font-style: italic;
+    color: var(--ink);
+    border-left: 2px solid var(--green);
+    padding-left: .8rem;
+  }
+  .scene ol, .scene ul.steps { padding-left: 1.2rem; margin: .5rem 0; }
+  .scene li { margin: .3rem 0; font-size: .93rem; }
+
+  code, .cmd {
+    font-family: var(--mono);
+    font-size: .85em;
+    background: var(--ink);
+    color: #e8eef5;
+    padding: .12rem .45rem;
+    border-radius: 5px;
+  }
+  .cmd-block {
+    display: block;
+    background: var(--ink);
+    color: #e8eef5;
+    font-family: var(--mono);
+    font-size: .82rem;
+    padding: .7rem .9rem;
+    border-radius: 7px;
+    margin: .6rem 0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* ---- Data sheet ---- */
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .data-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+    box-shadow: var(--shadow);
+  }
+  .data-card h4 {
+    margin: 0 0 .75rem;
+    font-size: .92rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .data-card h4 .tag {
+    font-size: .64rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 99px;
+    padding: .15rem .55rem;
+  }
+  dl.fields {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: .35rem .9rem;
+    font-size: .88rem;
+  }
+  dl.fields dt {
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  dl.fields dd {
+    margin: 0;
+    color: var(--ink);
+    font-weight: 500;
+    font-family: var(--mono);
+    font-size: .82rem;
+    word-break: break-word;
+  }
+  table.items {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+    margin-top: .25rem;
+  }
+  table.items th, table.items td {
+    text-align: left;
+    padding: .4rem .5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  table.items th {
+    font-size: .68rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+  table.items td.num {
+    text-align: right;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  table.items tfoot td {
+    font-weight: 700;
+    border-bottom: 0;
+    padding-top: .55rem;
+  }
+  .data-note {
+    font-size: .82rem;
+    color: var(--ink-soft);
+    background: var(--amber-soft);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 7px 7px 0;
+    padding: .6rem .85rem;
+    margin: 0 0 1rem;
+  }
+  .data-note b { color: var(--amber); }
+
+  table.prio {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+    margin: .5rem 0 1rem;
+  }
+  table.prio th, table.prio td {
+    text-align: left;
+    padding: .55rem .7rem;
+    border-bottom: 1px solid var(--line);
+  }
+  table.prio th {
+    font-size: .72rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .stars { color: var(--amber); white-space: nowrap; }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    font-size: .82rem;
+    color: var(--ink-faint);
+    text-align: center;
+  }
+  footer a { color: var(--accent); }
+
+  @media (max-width: 480px) {
+    .scene { padding: 1.1rem; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Entrega Final · Desarrollo de Software · UTN FRRO</p>
+    <h1>Guion del Video</h1>
+    <p class="sub">Sistema de Gestión de Cajas Automáticas — demostración del funcionamiento</p>
+    <div class="meta-row">
+      <span><b>Integrante:</b> Vera, Enzo</span>
+      <span><b>Duración objetivo:</b> 10–14 min</span>
+      <span><b>Escenas:</b> 8</span>
+    </div>
+  </header>
+
+  <div class="callout">
+    <p><b>Objetivo (según la cátedra):</b> <i>"Video explicando el funcionamiento del sistema."</i> No alcanza con mostrar pantallas — hay que <b>explicar mientras se demuestra</b> y dejar en evidencia que se cumplen los requisitos de la Aprobación.</p>
+  </div>
+
+  <h2 class="sec-label">Lo que el video debe demostrar</h2>
+  <ul class="check-grid">
+    <li>Login con JWT y 2 niveles de acceso</li>
+    <li>Protección de rutas por rol</li>
+    <li>CRUD simple completo</li>
+    <li>CRUD dependiente</li>
+    <li>Listado con filtro</li>
+    <li>Vista de detalle</li>
+    <li>Historia de usuario con valor de negocio</li>
+    <li>Validación y manejo de errores</li>
+    <li>Generación de PDF</li>
+    <li>Responsive / mobile-first</li>
+    <li>Backend en capas + ORM (Sequelize)</li>
+    <li>Tests como evidencia</li>
+  </ul>
+
+  <h2 class="sec-label">Antes de grabar</h2>
+  <ol class="prep">
+    <li><b>Datos limpios:</b> corré el seed para tener datos coherentes — <code>cd server &amp;&amp; node seed.js</code></li>
+    <li><b>Levantá los servidores:</b> <code>npm run dev</code> desde la raíz (server + client), o usá el deploy.</li>
+    <li><b>Credenciales a mano:</b> Admin <code>admin@taller.com / admin1234</code> · Técnico <code>tecnico@taller.com / tecnico1234</code></li>
+    <li><b>Cerrá</b> pestañas y notificaciones. Navegador en pantalla completa.</li>
+    <li><b>Tené a la vista la sección "Datos para cargar en vivo"</b> (abajo) — ya están los datos del cliente, caja, reparación e ítems listos para copiar.</li>
+    <li><b>Audio:</b> lugar silencioso, hablá pausado. Si te trabás, repetí la escena (se corta en edición).</li>
+  </ol>
+
+  <h2 class="sec-label">Datos para cargar en vivo</h2>
+  <p class="data-note">Estos son los datos que vas a ingresar durante la demo (escenas 3 y 4). Ya están pensados para ser coherentes — tenelos a la vista para no perder tiempo. <b>Tip:</b> abrí esta página en una segunda pantalla o en el celular.</p>
+
+  <div class="data-grid">
+
+    <div class="data-card">
+      <h4>Cliente <span class="tag">Escena 3</span></h4>
+      <dl class="fields">
+        <dt>Nombre</dt><dd>Marcelo Funes</dd>
+        <dt>Empresa</dt><dd>Transportes del Litoral SRL</dd>
+        <dt>Teléfono</dt><dd>341-5567788</dd>
+        <dt>Email</dt><dd>marcelo@translitoral.com</dd>
+        <dt>CUIT</dt><dd>30-71299845-2</dd>
+      </dl>
+    </div>
+
+    <div class="data-card">
+      <h4>Caja <span class="tag">Escena 4</span></h4>
+      <dl class="fields">
+        <dt>N.º de serie</dt><dd>ZF-6HP-2024-118</dd>
+        <dt>Tipo</dt><dd>camión</dd>
+        <dt>Marca</dt><dd>ZF</dd>
+        <dt>Modelo</dt><dd>6HP602C</dd>
+        <dt>Cliente</dt><dd>Marcelo Funes</dd>
+      </dl>
+    </div>
+
+    <div class="data-card">
+      <h4>Reparación <span class="tag">Escena 4</span></h4>
+      <dl class="fields">
+        <dt>Técnico</dt><dd>Carlos Técnico</dd>
+        <dt>Falla declarada</dt><dd>Patina en 3.ª y 4.ª, no sostiene la marcha en subida</dd>
+        <dt>Diagnóstico</dt><dd>Desgaste de embrague C2 y solenoide de presión con fuga</dd>
+      </dl>
+    </div>
+
+  </div>
+
+  <div class="data-card" style="margin-bottom:1rem">
+    <h4>Ítems del presupuesto <span class="tag">Escena 4 · pestaña Presupuesto</span></h4>
+    <div style="overflow-x:auto">
+    <table class="items">
+      <thead>
+        <tr><th>Descripción</th><th style="text-align:right">Cant.</th><th style="text-align:right">Precio unit.</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Kit de embrague C2 (discos y platos)</td><td class="num">1</td><td class="num">185.000</td></tr>
+        <tr><td>Solenoide de presión EPC</td><td class="num">1</td><td class="num">96.000</td></tr>
+        <tr><td>Aceite ATF Dexron VI (20 L)</td><td class="num">1</td><td class="num">42.000</td></tr>
+        <tr><td>Mano de obra — overhaul parcial</td><td class="num">1</td><td class="num">120.000</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td>Subtotal neto</td><td class="num"></td><td class="num">443.000</td></tr>
+      </tfoot>
+    </table>
+    </div>
+  </div>
+
+  <div class="data-card" style="margin-bottom:1rem">
+    <h4>Trabajos realizados <span class="tag">Escena 4 · pestaña Trabajos</span></h4>
+    <div style="overflow-x:auto">
+    <table class="items">
+      <thead>
+        <tr><th>Descripción</th><th style="text-align:right">Cant.</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Reemplazo de kit de embrague C2</td><td class="num">1</td></tr>
+        <tr><td>Cambio de solenoide EPC y limpieza de cuerpo de válvulas</td><td class="num">1</td></tr>
+        <tr><td>Drenaje y carga de aceite ATF nuevo</td><td class="num">1</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <p class="data-note"><b>Foto (pestaña Fotos):</b> tené guardada en el escritorio cualquier imagen de una caja/transmisión (sirve una foto de internet) para subirla rápido. Si grabás en el celular, podés usar la cámara en el momento.</p>
+
+  <h2 class="sec-label">Escenas</h2>
+
+  <!-- 1 -->
+  <article class="scene">
+    <div class="scene-head">
+      <span class="scene-num">01</span>
+      <h3 class="scene-title">Introducción</h3>
+      <span class="dur">≈ 1 min</span>
+    </div>
+    <div class="block block-show">
+      <div class="block-label">🎬 Mostrá</div>
+      <p>La pantalla de login con el logo.</p>
+    </div>
+    <div class="block block-say">
+      <div class="block-label">🎙 Decí</div>
+      <p class="say-quote">"Hola, soy Enzo Vera. Este es el trabajo final de Desarrollo de Software: un sistema web para gestionar un taller de reparación de cajas automáticas de vehículos pesados, basado en un caso real de Rosario. El problema: un taller maneja muchos clientes, cada cliente tiene cajas, y cada caja pasa por varias reparaciones con un ciclo de vida definido. Hoy eso se lleva en papel; este sistema lo digitaliza. Está construido como una app full-stack con frontend y backend separados que se comunican por una API REST."</p>
+    </div>
+  </article>
+
+  <!-- 2 -->
+  <article class="scene key">
+    <div class="scene-head">
+      <span class="scene-num">02</span>
+      <h3 class="scene-title">Login · Roles · Protección de rutas</h3>
+      <span class="dur">≈ 2 min</span>
+      <span class="pill-key">Imprescindible</span>
+    </div>
+    <ol class="steps">
+      <li><b>Entrá con password incorrecta</b> → mostrá el error rojo "Credenciales inválidas".
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"El backend valida las credenciales; si fallan devuelve un 401. Las contraseñas se guardan hasheadas con bcrypt, nunca en texto plano."</p></div>
+      </li>
+      <li><b>Ingresá como Técnico.</b> Señalá el menú: Dashboard, Cajas, Clientes, Perfil. <b>No aparece "Usuarios".</b></li>
+      <li><b>Escribí <code>/usuarios</code> en la URL</b> → te redirige al inicio.
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"Aunque escriba la URL a mano, la ruta está protegida: el sistema verifica el rol y me redirige. La protección está en el frontend y en el backend."</p></div>
+      </li>
+      <li><b>Cerrá sesión y entrá como Admin</b> → ahora SÍ aparece "Usuarios".
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"Con rol de administrador tengo acceso a la gestión de usuarios. Estos son los dos niveles de acceso."</p></div>
+      </li>
+      <li><i>(Opcional)</i> En Usuarios, mostrá cambiar el rol de un técnico o atender una solicitud de reseteo.</li>
+    </ol>
+  </article>
+
+  <!-- 3 -->
+  <article class="scene">
+    <div class="scene-head">
+      <span class="scene-num">03</span>
+      <h3 class="scene-title">CRUD Clientes · validación · filtro</h3>
+      <span class="dur">≈ 2 min</span>
+    </div>
+    <ol class="steps">
+      <li><b>Andá a Clientes.</b> Mostrá la lista.</li>
+      <li><b>Buscá sin tildes</b> (ej: "gonzalez") → filtra a "González".
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"El listado tiene búsqueda con filtro, y algo a destacar: ignora tildes usando la extensión unaccent de PostgreSQL."</p></div>
+      </li>
+      <li><b>Creá un cliente</b> pero primero guardá <b>sin nombre</b> (o email inválido) → mostrá el error.
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"La validación se hace en el backend con Zod. Si mando datos inválidos devuelve un 400 con el detalle. Nunca confío solo en el frontend."</p></div>
+      </li>
+      <li><b>Completá bien</b> (cliente <b>Marcelo Funes</b> — ver datos arriba) <b>y guardá.</b> Entrá al <b>detalle</b> del cliente.</li>
+      <li><i>(Opcional)</i> Intentá borrar un cliente con cajas → "No se puede eliminar".
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"La baja valida dependencias: no me deja borrar un cliente que tiene cajas, para no romper la integridad."</p></div>
+      </li>
+    </ol>
+  </article>
+
+  <!-- 4 -->
+  <article class="scene key">
+    <div class="scene-head">
+      <span class="scene-num">04</span>
+      <h3 class="scene-title">Ciclo de vida de una reparación</h3>
+      <span class="dur">≈ 4 min</span>
+      <span class="pill-key">★ La más importante</span>
+    </div>
+    <p style="margin:.2rem 0 .6rem;color:var(--ink-soft);font-size:.9rem">Es la historia de usuario con valor de negocio: cubre CRUD dependiente, PDF y flujo de estados. Dedicale tiempo.</p>
+    <ol class="steps">
+      <li><b>Cajas</b> → mostrá el listado y los <b>filtros</b> (serie, tipo, cliente).</li>
+      <li><b>Creá la caja</b> <code>ZF-6HP-2024-118</code> asociada a Marcelo Funes (ver datos arriba). <i>Cada caja pertenece a un cliente — relación dependiente.</i></li>
+      <li><b>Desde la caja, creá una Reparación</b> con la falla declarada (ver datos arriba). Queda en estado <b>"ingresada"</b>.
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"La reparación depende de la caja, que depende del cliente: este es el CRUD dependiente."</p></div>
+      </li>
+      <li><b>Mostrá el selector de estados.</b>
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"Cada reparación sigue un flujo con valor de negocio: ingresada → presupuestada → aprobada → terminada → entregada, o rechazada. Es el corazón del sistema."</p></div>
+      </li>
+      <li><b>Pestaña Presupuesto:</b> cargá los 4 ítems de la tabla de arriba (kit C2, solenoide, aceite, mano de obra). <i>Los ítems dependen de la reparación.</i></li>
+      <li><b>Descargá el PDF</b> y abrilo en pantalla.
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"El sistema genera el presupuesto en PDF al vuelo, con los datos del taller, el cliente, los ítems, el IVA y el total."</p></div>
+      </li>
+      <li><b>Cambiá a "presupuestada" → "aprobada".</b> Pestaña <b>Trabajos:</b> cargá los 3 trabajos de la tabla de arriba.</li>
+      <li><b>Pestaña Fotos:</b> subí una foto.
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"Puedo adjuntar fotos; se suben a Cloudinary. En el celular se usa la cámara directamente."</p></div>
+      </li>
+      <li><b>Cambiá a "terminada" → "entregada".</b>
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"Cierro el ciclo: la reparación queda entregada. Recorrimos toda la historia de usuario de punta a punta."</p></div>
+      </li>
+    </ol>
+  </article>
+
+  <!-- 5 -->
+  <article class="scene">
+    <div class="scene-head">
+      <span class="scene-num">05</span>
+      <h3 class="scene-title">Dashboard</h3>
+      <span class="dur">≈ 1 min</span>
+    </div>
+    <div class="block block-show">
+      <div class="block-label">🎬 Mostrá</div>
+      <p>Las tarjetas con contadores por estado. Hacé clic en una para ir al listado filtrado.</p>
+    </div>
+    <div class="block block-say">
+      <div class="block-label">🎙 Decí</div>
+      <p class="say-quote">"El dashboard da una vista general del taller: cuántas reparaciones hay en cada estado. Las tarjetas son clicables y llevan al listado filtrado por ese estado."</p>
+    </div>
+  </article>
+
+  <!-- 6 -->
+  <article class="scene">
+    <div class="scene-head">
+      <span class="scene-num">06</span>
+      <h3 class="scene-title">Responsive / PWA</h3>
+      <span class="dur">≈ 1 min</span>
+    </div>
+    <div class="block block-show">
+      <div class="block-label">🎬 Mostrá</div>
+      <p>DevTools (F12) → vista móvil. Navegá un par de pantallas: la navegación pasa a barra inferior y todo se adapta.</p>
+    </div>
+    <div class="block block-say">
+      <div class="block-label">🎙 Decí</div>
+      <p class="say-quote">"La app está diseñada mobile-first y es totalmente responsive. En el celular la navegación se mueve a una barra inferior. Además es una PWA: se puede instalar como app desde el navegador."</p>
+    </div>
+  </article>
+
+  <!-- 7 -->
+  <article class="scene">
+    <div class="scene-head">
+      <span class="scene-num">07</span>
+      <h3 class="scene-title">Backend · arquitectura · tests</h3>
+      <span class="dur">≈ 1–2 min</span>
+    </div>
+    <ol class="steps">
+      <li><b>Mostrá la estructura</b> de <code>server/</code>: <code>routes/</code>, <code>controllers/</code>, <code>models/</code>, <code>middlewares/</code>, <code>config/</code>. Abrí <code>models/index.js</code> un segundo.
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"El backend está en capas: las rutas reciben las peticiones, los controllers tienen la lógica, y los modelos de Sequelize —el ORM— mapean las tablas de PostgreSQL. Acá están las entidades y sus relaciones."</p></div>
+      </li>
+      <li><b>Corré los tests:</b>
+        <span class="cmd-block">cd server &amp;&amp; npm test</span>
+        Mostrá: <b>26 tests, 3 suites, todo en verde.</b>
+        <div class="block block-say"><div class="block-label">🎙 Decí</div><p class="say-quote">"Tests de integración con Jest y Supertest: 26 tests que cubren autenticación, roles, los CRUDs, la validación y el PDF. Todos pasan."</p></div>
+      </li>
+      <li><i>(Opcional)</i> Mencioná Vitest + Cypress en el frontend.</li>
+    </ol>
+  </article>
+
+  <!-- 8 -->
+  <article class="scene">
+    <div class="scene-head">
+      <span class="scene-num">08</span>
+      <h3 class="scene-title">Cierre</h3>
+      <span class="dur">≈ 30 seg</span>
+    </div>
+    <div class="block block-say">
+      <div class="block-label">🎙 Decí</div>
+      <p class="say-quote">"En resumen: una app full-stack con React en el frontend y Node con Express y Sequelize sobre PostgreSQL en el backend, con autenticación por roles, generación de PDF, imágenes en la nube, y desplegada en producción sobre Vercel, Render y Neon. Gracias."</p>
+    </div>
+    <div class="block block-show">
+      <div class="block-label">🎬 Mostrá</div>
+      <p>La URL de producción: <code>https://dsw-final-transmisiones.vercel.app</code></p>
+    </div>
+  </article>
+
+  <h2 class="sec-label">Si te quedás sin tiempo — prioridad</h2>
+  <table class="prio">
+    <thead><tr><th>Escena</th><th>Peso</th></tr></thead>
+    <tbody>
+      <tr><td>02 · Login + Roles</td><td class="stars">★★ Imprescindible</td></tr>
+      <tr><td>04 · Ciclo de reparación</td><td class="stars">★★ Imprescindible</td></tr>
+      <tr><td>03 · CRUD + validación</td><td class="stars">★ Alto</td></tr>
+      <tr><td>07 · Backend + tests</td><td class="stars">★ Alto</td></tr>
+      <tr><td>01 · 05 · 06 · 08</td><td>Suman, pero recortables</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec-label">Notas finales</h2>
+  <ul class="notes">
+    <li><b>¿Local o producción?</b> Producción se ve más profesional, pero el primer request a Render tarda ~30–50 s (plan free "duerme"). Si grabás contra producción, <b>despertá el backend entrando una vez antes</b>. Si querés fluidez, grabá local y mostrá la URL al final.</li>
+    <li><b>Las escenas 2 y 4 son las que más pesan</b> en la evaluación. No las saltees.</li>
+    <li><b>No leas monótono.</b> Usá esto como apoyo, pero hablá natural, como si le explicaras a un compañero.</li>
+  </ul>
+
+  <footer>
+    Guion de apoyo · Cajas Automáticas · Documento interno para la grabación de la entrega final
+  </footer>
+
+</div>

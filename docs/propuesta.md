@@ -41,7 +41,7 @@ Los talleres especializados en cajas automáticas manejan un flujo de trabajo co
 
 ### Funcionalidades de Negocio
 - **Flujo de estados:** `ingresada → presupuestada → aprobada → terminada → entregada / rechazada`
-- **Generación de PDF:** presupuesto descargable por reparación (PDFKit)
+- **Generación de PDF:** presupuesto descargable por reparación (@react-pdf/renderer)
 - **Galería de fotos:** upload a Cloudinary con soporte de cámara móvil
 - **Dashboard:** resumen estadístico de órdenes por estado
 - **Control de acceso por rol:** Admin y Técnico con rutas protegidas diferenciadas
@@ -55,10 +55,11 @@ Los talleres especializados en cajas automáticas manejan un flujo de trabajo co
 | Frontend | React 18 + Vite 5 |
 | Estilos | Tailwind CSS |
 | Backend | Node.js + Express 4 |
+| ORM | Sequelize |
 | Base de datos | PostgreSQL (Neon en producción) |
 | Autenticación | JWT |
 | Almacenamiento | Cloudinary |
-| PDF | PDFKit |
+| PDF | @react-pdf/renderer |
 | PWA | vite-plugin-pwa + Workbox |
 | Tests Backend | Jest + Supertest |
 | Tests Frontend | Vitest + React Testing Library + Cypress |

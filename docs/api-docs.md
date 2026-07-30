@@ -2,6 +2,17 @@
 
 Este documento detalla los endpoints principales de la API RESTful desarrollada en Node.js y Express para el sistema de gestión de reparaciones. Toda la comunicación se realiza en formato JSON.
 
+## Arquitectura del Backend
+
+El backend sigue una **arquitectura en capas**:
+
+- **Rutas** (`src/routes/`): definen los endpoints y aplican los middlewares de autenticación/autorización.
+- **Controllers** (`src/controllers/`): contienen la lógica de negocio y validan la entrada con **Zod**.
+- **Modelos / ORM** (`src/models/`): mapeo objeto-relacional con **Sequelize** sobre PostgreSQL. Cada entidad del negocio (Usuario, Cliente, Caja, Reparación, ItemPresupuesto, ItemReparado, Foto, SolicitudReset) es un modelo de Sequelize, con sus asociaciones (`hasMany` / `belongsTo`) declaradas en `src/models/index.js`.
+- **Middlewares** (`src/middlewares/`): autenticación JWT, control de rol y manejo centralizado de errores.
+
+Todas las respuestas usan un envelope uniforme: `{ ok: true, data }` en éxito y `{ ok: false, error }` en error.
+
 ---
 
 ## 1. Autenticación (`/api/auth`)

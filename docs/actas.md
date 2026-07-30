@@ -38,8 +38,8 @@ Registro cronológico del desarrollo del proyecto. Trabajo individual.
 **Actividades:**
 - Agregado campo CUIT en clientes
 - Implementación de funcionalidad de baja con validación de dependencias (no se puede borrar cliente con cajas, ni caja con reparaciones)
-- Migración de generación de PDF a PDFKit (reemplazo de `@react-pdf/renderer` por incompatibilidad ESM en backend)
-- Corrección de bug `ERR_REQUIRE_ESM` en carga dinámica de módulos
+- Generación de presupuestos en PDF con `@react-pdf/renderer`
+- Corrección de bug `ERR_REQUIRE_ESM`: al ser `@react-pdf/renderer` un paquete ESM y el backend CommonJS, se carga mediante `import()` dinámico
 - Fixes de UX en formularios y navegación
 - Escritura de suite completa de tests de integración: **26 tests** en 3 suites (auth, clientes, presupuesto) con Jest + Supertest
 - Documentación de pruebas manuales (smoke testing)

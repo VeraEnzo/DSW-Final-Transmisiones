@@ -13,9 +13,10 @@ Aplicación web PWA para gestionar reparaciones de cajas automáticas de vehícu
 | UI | Tailwind CSS + componentes propios |
 | Auth | JWT (JSON Web Tokens) |
 | Backend | Node.js + Express 4 |
+| ORM | Sequelize |
 | DB | PostgreSQL |
 | Storage | Cloudinary (fotos en la nube) |
-| PDF | PDFKit |
+| PDF | @react-pdf/renderer |
 | PWA | vite-plugin-pwa + Workbox |
 | Deploy | Vercel + Render + Neon |
 
