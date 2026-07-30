@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const pool = require('../config/db');
+const { ItemReparado } = require('../models');
 
 const itemSchema = z.object({
   descripcion: z.string().min(1),
@@ -11,12 +11,13 @@ const addItem = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = itemSchema.parse(req.body);
-    const { rows } = await pool.query(
-      `INSERT INTO items_reparados (id_reparacion, descripcion, cantidad, observacion)
-       VALUES ($1,$2,$3,$4) RETURNING *`,
-      [id, data.descripcion, data.cantidad, data.observacion]
-    );
-    res.status(201).json({ ok: true, data: rows[0] });
+    const item = await ItemReparado.create({
+      id_reparacion: id,
+      descripcion: data.descripcion,
+      cantidad: data.cantidad,
+      observacion: data.observacion,
+    });
+    res.status(201).json({ ok: true, data: item });
   } catch (err) {
     next(err);
   }
@@ -29,15 +30,13 @@ const updateItem = async (req, res, next) => {
     const fields = Object.keys(data).filter((k) => data[k] !== undefined);
     if (fields.length === 0) return res.status(400).json({ ok: false, error: 'Sin campos' });
 
-    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
-    const values = [...fields.map((f) => data[f]), id];
+    const item = await ItemReparado.findByPk(id);
+    if (!item) return res.status(404).json({ ok: false, error: 'Ítem no encontrado' });
 
-    const { rows } = await pool.query(
-      `UPDATE items_reparados SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
-      values
-    );
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Ítem no encontrado' });
-    res.json({ ok: true, data: rows[0] });
+    const updates = {};
+    fields.forEach((f) => { updates[f] = data[f]; });
+    await item.update(updates);
+    res.json({ ok: true, data: item });
   } catch (err) {
     next(err);
   }
@@ -46,8 +45,8 @@ const updateItem = async (req, res, next) => {
 const deleteItem = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { rowCount } = await pool.query('DELETE FROM items_reparados WHERE id = $1', [id]);
-    if (rowCount === 0) return res.status(404).json({ ok: false, error: 'Ítem no encontrado' });
+    const deleted = await ItemReparado.destroy({ where: { id } });
+    if (deleted === 0) return res.status(404).json({ ok: false, error: 'Ítem no encontrado' });
     res.json({ ok: true, data: { deleted: true } });
   } catch (err) {
     next(err);

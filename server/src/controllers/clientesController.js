@@ -1,5 +1,6 @@
 const { z } = require('zod');
-const pool = require('../config/db');
+const { Op } = require('sequelize');
+const { Cliente, Caja, sequelize } = require('../models');
 
 const clienteSchema = z.object({
   nombre: z.string().min(2),
@@ -12,15 +13,27 @@ const clienteSchema = z.object({
 const list = async (req, res, next) => {
   try {
     const { search } = req.query;
-    let query = 'SELECT * FROM clientes';
-    const params = [];
+    const options = { order: [['nombre', 'ASC']] };
+
     if (search) {
-      query += ` WHERE unaccent(nombre) ILIKE unaccent($1) OR unaccent(empresa) ILIKE unaccent($1)`;
-      params.push(`%${search}%`);
+      // Búsqueda sin tildes (unaccent es específico de PostgreSQL),
+      // replicando el OR sobre nombre y empresa del query original.
+      options.where = {
+        [Op.or]: [
+          sequelize.where(
+            sequelize.fn('unaccent', sequelize.col('nombre')),
+            { [Op.iLike]: sequelize.fn('unaccent', `%${search}%`) }
+          ),
+          sequelize.where(
+            sequelize.fn('unaccent', sequelize.col('empresa')),
+            { [Op.iLike]: sequelize.fn('unaccent', `%${search}%`) }
+          ),
+        ],
+      };
     }
-    query += ' ORDER BY nombre';
-    const { rows } = await pool.query(query, params);
-    res.json({ ok: true, data: rows });
+
+    const clientes = await Cliente.findAll(options);
+    res.json({ ok: true, data: clientes });
   } catch (err) {
     next(err);
   }
@@ -29,11 +42,14 @@ const list = async (req, res, next) => {
 const create = async (req, res, next) => {
   try {
     const data = clienteSchema.parse(req.body);
-    const { rows } = await pool.query(
-      'INSERT INTO clientes (nombre, empresa, telefono, email, cuit) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-      [data.nombre, data.empresa || null, data.telefono || null, data.email || null, data.cuit || null]
-    );
-    res.status(201).json({ ok: true, data: rows[0] });
+    const cliente = await Cliente.create({
+      nombre: data.nombre,
+      empresa: data.empresa || null,
+      telefono: data.telefono || null,
+      email: data.email || null,
+      cuit: data.cuit || null,
+    });
+    res.status(201).json({ ok: true, data: cliente });
   } catch (err) {
     next(err);
   }
@@ -42,18 +58,32 @@ const create = async (req, res, next) => {
 const getById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { rows } = await pool.query('SELECT * FROM clientes WHERE id = $1', [id]);
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
+    const cliente = await Cliente.findByPk(id);
+    if (!cliente) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
 
-    const cajas = await pool.query(
-      `SELECT c.*,
-        (SELECT COUNT(*) FROM reparaciones r WHERE r.id_caja = c.id) as total_reparaciones,
-        (SELECT estado FROM reparaciones r WHERE r.id_caja = c.id ORDER BY created_at DESC LIMIT 1) as ultimo_estado
-       FROM cajas c WHERE c.id_cliente = $1 ORDER BY c.created_at DESC`,
-      [id]
-    );
+    // Cajas del cliente con total de reparaciones y último estado (subqueries).
+    const cajas = await Caja.findAll({
+      where: { id_cliente: id },
+      order: [['created_at', 'DESC']],
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              '(SELECT COUNT(*) FROM reparaciones r WHERE r.id_caja = "Caja".id)'
+            ),
+            'total_reparaciones',
+          ],
+          [
+            sequelize.literal(
+              '(SELECT estado FROM reparaciones r WHERE r.id_caja = "Caja".id ORDER BY created_at DESC LIMIT 1)'
+            ),
+            'ultimo_estado',
+          ],
+        ],
+      },
+    });
 
-    res.json({ ok: true, data: { ...rows[0], cajas: cajas.rows } });
+    res.json({ ok: true, data: { ...cliente.toJSON(), cajas } });
   } catch (err) {
     next(err);
   }
@@ -63,19 +93,15 @@ const update = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = clienteSchema.partial().parse(req.body);
-    const fields = Object.keys(data);
-    if (fields.length === 0) return res.status(400).json({ ok: false, error: 'Sin campos' });
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ ok: false, error: 'Sin campos' });
+    }
 
-    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
-    const values = fields.map((f) => data[f]);
-    values.push(id);
+    const cliente = await Cliente.findByPk(id);
+    if (!cliente) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
 
-    const { rows } = await pool.query(
-      `UPDATE clientes SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
-      values
-    );
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
-    res.json({ ok: true, data: rows[0] });
+    await cliente.update(data);
+    res.json({ ok: true, data: cliente });
   } catch (err) {
     next(err);
   }
@@ -84,12 +110,12 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const cajas = await pool.query('SELECT COUNT(*) FROM cajas WHERE id_cliente = $1', [id]);
-    if (parseInt(cajas.rows[0].count) > 0) {
+    const cajasCount = await Caja.count({ where: { id_cliente: id } });
+    if (cajasCount > 0) {
       return res.status(409).json({ ok: false, error: 'No se puede eliminar: el cliente tiene cajas asociadas' });
     }
-    const { rowCount } = await pool.query('DELETE FROM clientes WHERE id = $1', [id]);
-    if (rowCount === 0) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
+    const deleted = await Cliente.destroy({ where: { id } });
+    if (deleted === 0) return res.status(404).json({ ok: false, error: 'Cliente no encontrado' });
     res.json({ ok: true, data: { deleted: true } });
   } catch (err) {
     next(err);

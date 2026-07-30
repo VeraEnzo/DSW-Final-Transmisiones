@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const { Foto } = require('../models');
 const { cloudinary, upload, uploadToCloudinary } = require('../config/cloudinary');
 
 const uploadFoto = [
@@ -11,12 +11,13 @@ const uploadFoto = [
       const result = await uploadToCloudinary(req.file.buffer, `cajas-automaticas/${id}`);
       const etiqueta = req.body.etiqueta || null;
 
-      const { rows } = await pool.query(
-        `INSERT INTO fotos (id_reparacion, url_cloudinary, public_id_cloudinary, etiqueta)
-         VALUES ($1,$2,$3,$4) RETURNING *`,
-        [id, result.secure_url, result.public_id, etiqueta]
-      );
-      res.status(201).json({ ok: true, data: rows[0] });
+      const foto = await Foto.create({
+        id_reparacion: id,
+        url_cloudinary: result.secure_url,
+        public_id_cloudinary: result.public_id,
+        etiqueta,
+      });
+      res.status(201).json({ ok: true, data: foto });
     } catch (err) {
       next(err);
     }
@@ -26,14 +27,14 @@ const uploadFoto = [
 const deleteFoto = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { rows } = await pool.query('SELECT * FROM fotos WHERE id = $1', [id]);
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Foto no encontrada' });
+    const foto = await Foto.findByPk(id);
+    if (!foto) return res.status(404).json({ ok: false, error: 'Foto no encontrada' });
 
-    if (rows[0].public_id_cloudinary) {
-      await cloudinary.uploader.destroy(rows[0].public_id_cloudinary);
+    if (foto.public_id_cloudinary) {
+      await cloudinary.uploader.destroy(foto.public_id_cloudinary);
     }
 
-    await pool.query('DELETE FROM fotos WHERE id = $1', [id]);
+    await foto.destroy();
     res.json({ ok: true, data: { deleted: true } });
   } catch (err) {
     next(err);

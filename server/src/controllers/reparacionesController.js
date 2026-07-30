@@ -1,5 +1,12 @@
 const { z } = require('zod');
-const pool = require('../config/db');
+const {
+  Reparacion,
+  Caja,
+  Cliente,
+  ItemPresupuesto,
+  ItemReparado,
+  Foto,
+} = require('../models');
 
 const createSchema = z.object({
   id_caja: z.number().int(),
@@ -21,12 +28,13 @@ const updateSchema = z.object({
 const create = async (req, res, next) => {
   try {
     const data = createSchema.parse(req.body);
-    const { rows } = await pool.query(
-      `INSERT INTO reparaciones (id_caja, fecha_ingreso, tecnico, falla_declarada)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [data.id_caja, data.fecha_ingreso || new Date().toISOString().split('T')[0], data.tecnico, data.falla_declarada]
-    );
-    res.status(201).json({ ok: true, data: rows[0] });
+    const reparacion = await Reparacion.create({
+      id_caja: data.id_caja,
+      fecha_ingreso: data.fecha_ingreso || new Date().toISOString().split('T')[0],
+      tecnico: data.tecnico,
+      falla_declarada: data.falla_declarada,
+    });
+    res.status(201).json({ ok: true, data: reparacion });
   } catch (err) {
     next(err);
   }
@@ -35,32 +43,50 @@ const create = async (req, res, next) => {
 const getById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const rep = await pool.query(
-      `SELECT r.*,
-              c.numero_serie, c.tipo_vehiculo, c.marca, c.modelo,
-              cl.id as id_cliente, cl.nombre as cliente_nombre, cl.empresa as cliente_empresa,
-              cl.telefono as cliente_telefono, cl.email as cliente_email
-       FROM reparaciones r
-       JOIN cajas c ON c.id = r.id_caja
-       LEFT JOIN clientes cl ON cl.id = c.id_cliente
-       WHERE r.id = $1`,
-      [id]
-    );
-    if (!rep.rows[0]) return res.status(404).json({ ok: false, error: 'Reparación no encontrada' });
+    const reparacion = await Reparacion.findByPk(id, {
+      include: [
+        {
+          association: 'caja',
+          attributes: ['numero_serie', 'tipo_vehiculo', 'marca', 'modelo'],
+          include: [
+            {
+              association: 'cliente',
+              attributes: ['id', 'nombre', 'empresa', 'telefono', 'email'],
+            },
+          ],
+        },
+      ],
+    });
+    if (!reparacion) return res.status(404).json({ ok: false, error: 'Reparación no encontrada' });
 
-    const [presupuesto, items, fotos] = await Promise.all([
-      pool.query('SELECT * FROM items_presupuesto WHERE id_reparacion = $1 ORDER BY id', [id]),
-      pool.query('SELECT * FROM items_reparados WHERE id_reparacion = $1 ORDER BY id', [id]),
-      pool.query('SELECT * FROM fotos WHERE id_reparacion = $1 ORDER BY fecha_subida', [id]),
+    const [items_presupuesto, items_reparados, fotos] = await Promise.all([
+      ItemPresupuesto.findAll({ where: { id_reparacion: id }, order: [['id', 'ASC']] }),
+      ItemReparado.findAll({ where: { id_reparacion: id }, order: [['id', 'ASC']] }),
+      Foto.findAll({ where: { id_reparacion: id }, order: [['fecha_subida', 'ASC']] }),
     ]);
+
+    // Aplanar caja + cliente al mismo formato que devolvía el JOIN original.
+    const json = reparacion.toJSON();
+    const caja = json.caja || {};
+    const cliente = caja.cliente || {};
+    delete json.caja;
 
     res.json({
       ok: true,
       data: {
-        ...rep.rows[0],
-        items_presupuesto: presupuesto.rows,
-        items_reparados: items.rows,
-        fotos: fotos.rows,
+        ...json,
+        numero_serie: caja.numero_serie ?? null,
+        tipo_vehiculo: caja.tipo_vehiculo ?? null,
+        marca: caja.marca ?? null,
+        modelo: caja.modelo ?? null,
+        id_cliente: cliente.id ?? null,
+        cliente_nombre: cliente.nombre ?? null,
+        cliente_empresa: cliente.empresa ?? null,
+        cliente_telefono: cliente.telefono ?? null,
+        cliente_email: cliente.email ?? null,
+        items_presupuesto,
+        items_reparados,
+        fotos,
       },
     });
   } catch (err) {
@@ -75,15 +101,13 @@ const update = async (req, res, next) => {
     const fields = Object.keys(data).filter((k) => data[k] !== undefined);
     if (fields.length === 0) return res.status(400).json({ ok: false, error: 'Sin campos' });
 
-    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
-    const values = [...fields.map((f) => data[f]), id];
+    const reparacion = await Reparacion.findByPk(id);
+    if (!reparacion) return res.status(404).json({ ok: false, error: 'Reparación no encontrada' });
 
-    const { rows } = await pool.query(
-      `UPDATE reparaciones SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
-      values
-    );
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Reparación no encontrada' });
-    res.json({ ok: true, data: rows[0] });
+    const updates = {};
+    fields.forEach((f) => { updates[f] = data[f]; });
+    await reparacion.update(updates);
+    res.json({ ok: true, data: reparacion });
   } catch (err) {
     next(err);
   }
@@ -92,11 +116,12 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM fotos WHERE id_reparacion = $1', [id]);
-    await pool.query('DELETE FROM items_presupuesto WHERE id_reparacion = $1', [id]);
-    await pool.query('DELETE FROM items_reparados WHERE id_reparacion = $1', [id]);
-    const { rowCount } = await pool.query('DELETE FROM reparaciones WHERE id = $1', [id]);
-    if (rowCount === 0) return res.status(404).json({ ok: false, error: 'Reparación no encontrada' });
+    // Borrado en cascada manual (no hay ON DELETE CASCADE en el schema).
+    await Foto.destroy({ where: { id_reparacion: id } });
+    await ItemPresupuesto.destroy({ where: { id_reparacion: id } });
+    await ItemReparado.destroy({ where: { id_reparacion: id } });
+    const deleted = await Reparacion.destroy({ where: { id } });
+    if (deleted === 0) return res.status(404).json({ ok: false, error: 'Reparación no encontrada' });
     res.json({ ok: true, data: { deleted: true } });
   } catch (err) {
     next(err);
@@ -106,18 +131,34 @@ const remove = async (req, res, next) => {
 const porEstado = async (req, res, next) => {
   try {
     const estado = req.query.estado || 'ingresada';
-    const { rows } = await pool.query(
-      `SELECT r.id, r.estado, r.fecha_ingreso, r.tecnico,
-              c.numero_serie, c.marca, c.modelo,
-              cl.nombre as cliente_nombre
-       FROM reparaciones r
-       JOIN cajas c ON c.id = r.id_caja
-       LEFT JOIN clientes cl ON cl.id = c.id_cliente
-       WHERE r.estado = $1
-       ORDER BY r.created_at DESC`,
-      [estado]
-    );
-    res.json({ ok: true, data: rows });
+    const reparaciones = await Reparacion.findAll({
+      where: { estado },
+      attributes: ['id', 'estado', 'fecha_ingreso', 'tecnico'],
+      order: [['created_at', 'DESC']],
+      include: [
+        {
+          association: 'caja',
+          attributes: ['numero_serie', 'marca', 'modelo'],
+          include: [{ association: 'cliente', attributes: ['nombre'] }],
+        },
+      ],
+    });
+
+    const data = reparaciones.map((r) => {
+      const json = r.toJSON();
+      const caja = json.caja || {};
+      const cliente = caja.cliente || {};
+      delete json.caja;
+      return {
+        ...json,
+        numero_serie: caja.numero_serie ?? null,
+        marca: caja.marca ?? null,
+        modelo: caja.modelo ?? null,
+        cliente_nombre: cliente.nombre ?? null,
+      };
+    });
+
+    res.json({ ok: true, data });
   } catch (err) {
     next(err);
   }

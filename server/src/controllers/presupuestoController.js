@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const pool = require('../config/db');
+const { ItemPresupuesto, Reparacion } = require('../models');
 const { generatePresupuestoPDF } = require('../utils/pdf');
 
 const itemSchema = z.object({
@@ -13,12 +13,14 @@ const addItem = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = itemSchema.parse(req.body);
-    const { rows } = await pool.query(
-      `INSERT INTO items_presupuesto (id_reparacion, descripcion, cantidad, precio_unitario, observacion)
-       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [id, data.descripcion, data.cantidad, data.precio_unitario, data.observacion]
-    );
-    res.status(201).json({ ok: true, data: rows[0] });
+    const item = await ItemPresupuesto.create({
+      id_reparacion: id,
+      descripcion: data.descripcion,
+      cantidad: data.cantidad,
+      precio_unitario: data.precio_unitario,
+      observacion: data.observacion,
+    });
+    res.status(201).json({ ok: true, data: item });
   } catch (err) {
     next(err);
   }
@@ -31,15 +33,13 @@ const updateItem = async (req, res, next) => {
     const fields = Object.keys(data).filter((k) => data[k] !== undefined);
     if (fields.length === 0) return res.status(400).json({ ok: false, error: 'Sin campos' });
 
-    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
-    const values = [...fields.map((f) => data[f]), id];
+    const item = await ItemPresupuesto.findByPk(id);
+    if (!item) return res.status(404).json({ ok: false, error: 'Ítem no encontrado' });
 
-    const { rows } = await pool.query(
-      `UPDATE items_presupuesto SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
-      values
-    );
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Ítem no encontrado' });
-    res.json({ ok: true, data: rows[0] });
+    const updates = {};
+    fields.forEach((f) => { updates[f] = data[f]; });
+    await item.update(updates);
+    res.json({ ok: true, data: item });
   } catch (err) {
     next(err);
   }
@@ -48,8 +48,8 @@ const updateItem = async (req, res, next) => {
 const deleteItem = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { rowCount } = await pool.query('DELETE FROM items_presupuesto WHERE id = $1', [id]);
-    if (rowCount === 0) return res.status(404).json({ ok: false, error: 'Ítem no encontrado' });
+    const deleted = await ItemPresupuesto.destroy({ where: { id } });
+    if (deleted === 0) return res.status(404).json({ ok: false, error: 'Ítem no encontrado' });
     res.json({ ok: true, data: { deleted: true } });
   } catch (err) {
     next(err);
@@ -60,27 +60,44 @@ const getPDF = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const rep = await pool.query(
-      `SELECT r.*,
-              c.numero_serie, c.tipo_vehiculo, c.marca, c.modelo,
-              cl.nombre as cliente_nombre, cl.empresa as cliente_empresa,
-              cl.telefono as cliente_telefono, cl.cuit as cliente_cuit
-       FROM reparaciones r
-       JOIN cajas c ON c.id = r.id_caja
-       LEFT JOIN clientes cl ON cl.id = c.id_cliente
-       WHERE r.id = $1`,
-      [id]
-    );
-    if (!rep.rows[0]) return res.status(404).json({ ok: false, error: 'Reparación no encontrada' });
+    const reparacion = await Reparacion.findByPk(id, {
+      include: [
+        {
+          association: 'caja',
+          attributes: ['numero_serie', 'tipo_vehiculo', 'marca', 'modelo'],
+          include: [
+            { association: 'cliente', attributes: ['nombre', 'empresa', 'telefono', 'cuit'] },
+          ],
+        },
+      ],
+    });
+    if (!reparacion) return res.status(404).json({ ok: false, error: 'Reparación no encontrada' });
 
-    const items = await pool.query(
-      'SELECT * FROM items_presupuesto WHERE id_reparacion = $1 ORDER BY id',
-      [id]
-    );
+    const items = await ItemPresupuesto.findAll({
+      where: { id_reparacion: id },
+      order: [['id', 'ASC']],
+    });
+
+    // Aplanar caja + cliente al formato que espera el generador de PDF.
+    const json = reparacion.toJSON();
+    const caja = json.caja || {};
+    const cliente = caja.cliente || {};
+    delete json.caja;
+    const repData = {
+      ...json,
+      numero_serie: caja.numero_serie ?? null,
+      tipo_vehiculo: caja.tipo_vehiculo ?? null,
+      marca: caja.marca ?? null,
+      modelo: caja.modelo ?? null,
+      cliente_nombre: cliente.nombre ?? null,
+      cliente_empresa: cliente.empresa ?? null,
+      cliente_telefono: cliente.telefono ?? null,
+      cliente_cuit: cliente.cuit ?? null,
+    };
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=presupuesto-${id}.pdf`);
-    await generatePresupuestoPDF(rep.rows[0], items.rows, res);
+    await generatePresupuestoPDF(repData, items.map((i) => i.toJSON()), res);
   } catch (err) {
     next(err);
   }

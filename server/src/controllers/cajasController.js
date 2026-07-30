@@ -1,5 +1,6 @@
 const { z } = require('zod');
-const pool = require('../config/db');
+const { Op } = require('sequelize');
+const { Caja, Cliente, Reparacion, sequelize } = require('../models');
 
 const cajaSchema = z.object({
   numero_serie: z.string().min(1),
@@ -10,26 +11,49 @@ const cajaSchema = z.object({
   observaciones_generales: z.string().optional().nullable(),
 });
 
+// Subqueries de total de reparaciones y último estado (reutilizadas en list).
+const cajaExtraAttributes = [
+  [
+    sequelize.literal('(SELECT COUNT(*) FROM reparaciones r WHERE r.id_caja = "Caja".id)'),
+    'total_reparaciones',
+  ],
+  [
+    sequelize.literal(
+      '(SELECT estado FROM reparaciones r WHERE r.id_caja = "Caja".id ORDER BY created_at DESC LIMIT 1)'
+    ),
+    'ultimo_estado',
+  ],
+];
+
+// Aplana el cliente incluido a cliente_nombre / cliente_empresa (forma original).
+function flattenCliente(caja, extra = {}) {
+  const json = caja.toJSON();
+  const cliente = json.cliente || null;
+  delete json.cliente;
+  return {
+    ...json,
+    cliente_nombre: cliente ? cliente.nombre : null,
+    cliente_empresa: cliente ? cliente.empresa : null,
+    ...extra,
+  };
+}
+
 const list = async (req, res, next) => {
   try {
     const { numero_serie, id_cliente, tipo_vehiculo } = req.query;
-    let query = `
-      SELECT c.*, cl.nombre as cliente_nombre, cl.empresa as cliente_empresa,
-        (SELECT COUNT(*) FROM reparaciones r WHERE r.id_caja = c.id) as total_reparaciones,
-        (SELECT estado FROM reparaciones r WHERE r.id_caja = c.id ORDER BY created_at DESC LIMIT 1) as ultimo_estado
-      FROM cajas c
-      LEFT JOIN clientes cl ON cl.id = c.id_cliente
-      WHERE 1=1
-    `;
-    const params = [];
-    let i = 1;
-    if (numero_serie) { query += ` AND c.numero_serie ILIKE $${i++}`; params.push(`%${numero_serie}%`); }
-    if (id_cliente) { query += ` AND c.id_cliente = $${i++}`; params.push(id_cliente); }
-    if (tipo_vehiculo) { query += ` AND c.tipo_vehiculo = $${i++}`; params.push(tipo_vehiculo); }
-    query += ' ORDER BY c.created_at DESC';
+    const where = {};
+    if (numero_serie) where.numero_serie = { [Op.iLike]: `%${numero_serie}%` };
+    if (id_cliente) where.id_cliente = id_cliente;
+    if (tipo_vehiculo) where.tipo_vehiculo = tipo_vehiculo;
 
-    const { rows } = await pool.query(query, params);
-    res.json({ ok: true, data: rows });
+    const cajas = await Caja.findAll({
+      where,
+      order: [['created_at', 'DESC']],
+      attributes: { include: cajaExtraAttributes },
+      include: [{ association: 'cliente', attributes: ['nombre', 'empresa'] }],
+    });
+
+    res.json({ ok: true, data: cajas.map((c) => flattenCliente(c)) });
   } catch (err) {
     next(err);
   }
@@ -38,12 +62,8 @@ const list = async (req, res, next) => {
 const create = async (req, res, next) => {
   try {
     const data = cajaSchema.parse(req.body);
-    const { rows } = await pool.query(
-      `INSERT INTO cajas (numero_serie, tipo_vehiculo, marca, modelo, id_cliente, observaciones_generales)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [data.numero_serie, data.tipo_vehiculo, data.marca, data.modelo, data.id_cliente, data.observaciones_generales]
-    );
-    res.status(201).json({ ok: true, data: rows[0] });
+    const caja = await Caja.create(data);
+    res.status(201).json({ ok: true, data: caja });
   } catch (err) {
     next(err);
   }
@@ -52,20 +72,32 @@ const create = async (req, res, next) => {
 const getById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const cajaResult = await pool.query(
-      `SELECT c.*, cl.nombre as cliente_nombre, cl.empresa as cliente_empresa,
-              cl.telefono as cliente_telefono, cl.email as cliente_email
-       FROM cajas c LEFT JOIN clientes cl ON cl.id = c.id_cliente WHERE c.id = $1`,
-      [id]
-    );
-    if (!cajaResult.rows[0]) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
+    const caja = await Caja.findByPk(id, {
+      include: [
+        { association: 'cliente', attributes: ['nombre', 'empresa', 'telefono', 'email'] },
+      ],
+    });
+    if (!caja) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
 
-    const reparaciones = await pool.query(
-      'SELECT * FROM reparaciones WHERE id_caja = $1 ORDER BY created_at DESC',
-      [id]
-    );
+    const reparaciones = await Reparacion.findAll({
+      where: { id_caja: id },
+      order: [['created_at', 'DESC']],
+    });
 
-    res.json({ ok: true, data: { ...cajaResult.rows[0], reparaciones: reparaciones.rows } });
+    const json = caja.toJSON();
+    const cliente = json.cliente || null;
+    delete json.cliente;
+    res.json({
+      ok: true,
+      data: {
+        ...json,
+        cliente_nombre: cliente ? cliente.nombre : null,
+        cliente_empresa: cliente ? cliente.empresa : null,
+        cliente_telefono: cliente ? cliente.telefono : null,
+        cliente_email: cliente ? cliente.email : null,
+        reparaciones,
+      },
+    });
   } catch (err) {
     next(err);
   }
@@ -74,14 +106,12 @@ const getById = async (req, res, next) => {
 const getBySerie = async (req, res, next) => {
   try {
     const { numero_serie } = req.params;
-    const { rows } = await pool.query(
-      `SELECT c.*, cl.nombre as cliente_nombre, cl.empresa as cliente_empresa
-       FROM cajas c LEFT JOIN clientes cl ON cl.id = c.id_cliente
-       WHERE c.numero_serie = $1`,
-      [numero_serie]
-    );
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
-    res.json({ ok: true, data: rows[0] });
+    const caja = await Caja.findOne({
+      where: { numero_serie },
+      include: [{ association: 'cliente', attributes: ['nombre', 'empresa'] }],
+    });
+    if (!caja) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
+    res.json({ ok: true, data: flattenCliente(caja) });
   } catch (err) {
     next(err);
   }
@@ -91,18 +121,15 @@ const update = async (req, res, next) => {
   try {
     const { id } = req.params;
     const data = cajaSchema.partial().parse(req.body);
-    const fields = Object.keys(data);
-    if (fields.length === 0) return res.status(400).json({ ok: false, error: 'Sin campos' });
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ ok: false, error: 'Sin campos' });
+    }
 
-    const setClause = fields.map((f, i) => `${f} = $${i + 1}`).join(', ');
-    const values = [...fields.map((f) => data[f]), id];
+    const caja = await Caja.findByPk(id);
+    if (!caja) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
 
-    const { rows } = await pool.query(
-      `UPDATE cajas SET ${setClause} WHERE id = $${fields.length + 1} RETURNING *`,
-      values
-    );
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
-    res.json({ ok: true, data: rows[0] });
+    await caja.update(data);
+    res.json({ ok: true, data: caja });
   } catch (err) {
     next(err);
   }
@@ -111,12 +138,12 @@ const update = async (req, res, next) => {
 const remove = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const reps = await pool.query('SELECT COUNT(*) FROM reparaciones WHERE id_caja = $1', [id]);
-    if (parseInt(reps.rows[0].count) > 0) {
+    const repsCount = await Reparacion.count({ where: { id_caja: id } });
+    if (repsCount > 0) {
       return res.status(409).json({ ok: false, error: 'No se puede eliminar: la caja tiene reparaciones asociadas' });
     }
-    const { rowCount } = await pool.query('DELETE FROM cajas WHERE id = $1', [id]);
-    if (rowCount === 0) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
+    const deleted = await Caja.destroy({ where: { id } });
+    if (deleted === 0) return res.status(404).json({ ok: false, error: 'Caja no encontrada' });
     res.json({ ok: true, data: { deleted: true } });
   } catch (err) {
     next(err);

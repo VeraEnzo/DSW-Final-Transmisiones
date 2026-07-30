@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { z } = require('zod');
-const pool = require('../config/db');
+const { Usuario } = require('../models');
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -18,8 +18,7 @@ const registerSchema = z.object({
 const login = async (req, res, next) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
-    const user = rows[0];
+    const user = await Usuario.findOne({ where: { email } });
     if (!user) return res.status(401).json({ ok: false, error: 'Credenciales inválidas' });
 
     const valid = await bcrypt.compare(password, user.password_hash);
@@ -47,13 +46,13 @@ const register = async (req, res, next) => {
   try {
     const { nombre, email, password, rol } = registerSchema.parse(req.body);
     const hash = await bcrypt.hash(password, 10);
-    const { rows } = await pool.query(
-      'INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES ($1,$2,$3,$4) RETURNING id, nombre, email, rol',
-      [nombre, email, hash, rol]
-    );
-    res.status(201).json({ ok: true, data: rows[0] });
+    const user = await Usuario.create({ nombre, email, password_hash: hash, rol });
+    res.status(201).json({
+      ok: true,
+      data: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol },
+    });
   } catch (err) {
-    if (err.code === '23505') {
+    if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ ok: false, error: 'Este email ya se encuentra registrado' });
     }
     next(err);
@@ -69,13 +68,13 @@ const registerPublic = async (req, res, next) => {
     });
     const { nombre, email, password } = schema.parse(req.body);
     const hash = await bcrypt.hash(password, 10);
-    const { rows } = await pool.query(
-      'INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES ($1,$2,$3,$4) RETURNING id, nombre, email, rol',
-      [nombre, email, hash, 'tecnico']
-    );
-    res.status(201).json({ ok: true, data: rows[0] });
+    const user = await Usuario.create({ nombre, email, password_hash: hash, rol: 'tecnico' });
+    res.status(201).json({
+      ok: true,
+      data: { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol },
+    });
   } catch (err) {
-    if (err.code === '23505') {
+    if (err.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ ok: false, error: 'Este email ya se encuentra registrado' });
     }
     next(err);
@@ -84,12 +83,11 @@ const registerPublic = async (req, res, next) => {
 
 const me = async (req, res, next) => {
   try {
-    const { rows } = await pool.query(
-      'SELECT id, nombre, email, rol, created_at FROM usuarios WHERE id = $1',
-      [req.user.id]
-    );
-    if (!rows[0]) return res.status(404).json({ ok: false, error: 'Usuario no encontrado' });
-    res.json({ ok: true, data: rows[0] });
+    const user = await Usuario.findByPk(req.user.id, {
+      attributes: ['id', 'nombre', 'email', 'rol', 'created_at'],
+    });
+    if (!user) return res.status(404).json({ ok: false, error: 'Usuario no encontrado' });
+    res.json({ ok: true, data: user });
   } catch (err) {
     next(err);
   }

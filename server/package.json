@@ -12,8 +12,12 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testMatch": ["**/tests/**/*.test.js"],
-    "setupFiles": ["<rootDir>/tests/jest.setup.env.js"],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "setupFiles": [
+      "<rootDir>/tests/jest.setup.env.js"
+    ],
     "moduleNameMapper": {
       "^@react-pdf/renderer$": "<rootDir>/tests/__mocks__/react-pdf-renderer.js",
       "^@react-pdf/primitives$": "<rootDir>/tests/__mocks__/react-pdf-primitives.js"
@@ -31,6 +35,7 @@
     "pdfkit": "^0.15.0",
     "pg": "^8.12.0",
     "react": "^19.2.5",
+    "sequelize": "^6.37.8",
     "zod": "^3.23.8"
   },
   "devDependencies": {
