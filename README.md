@@ -144,6 +144,14 @@ Para conocer en detalle el diseño técnico y los reportes de calidad, revisá l
 
 ---
 
+## 🎥 Video explicativo
+
+Video que explica el funcionamiento del sistema, recorriendo la autenticación por roles, el ciclo de vida completo de una reparación, la generación del presupuesto en PDF y la arquitectura del backend:
+
+**[Ver el video](https://drive.google.com/file/d/109EWEGwsBpWQyf5f-WfghVKki0z_a1Tp/view?usp=sharing)**
+
+---
+
 ## Deploy
 
 **Aplicación en producción:** [https://dsw-final-transmisiones.vercel.app](https://dsw-final-transmisiones.vercel.app)

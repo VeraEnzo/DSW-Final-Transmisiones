@@ -103,6 +103,29 @@ Esto permite testear el endpoint `/presupuesto/pdf` verificando el status code y
 
 ---
 
+## Evidencia de ejecución
+
+Salida de `npm test` (ejecutado desde `server/`, contra la base de datos de test real):
+
+```
+> cajas-automaticas-server@1.0.0 test
+> jest --runInBand --forceExit
+
+PASS tests/auth.test.js
+PASS tests/clientes.test.js
+PASS tests/presupuesto.test.js
+
+Test Suites: 3 passed, 3 total
+Tests:       26 passed, 26 total
+Snapshots:   0 total
+Time:        10.297 s
+Ran all test suites.
+```
+
+> El aviso `Force exiting Jest` que aparece al final proviene del flag `--forceExit` del script: el pool de conexiones a PostgreSQL queda abierto tras los tests y Jest fuerza la salida. Es informativo, no un fallo.
+
+---
+
 ## Estructura de archivos
 
 ```

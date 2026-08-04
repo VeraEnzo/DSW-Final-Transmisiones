@@ -4,6 +4,19 @@
 **Integrante:** Vera, Enzo  
 **Repositorio:** https://github.com/VeraEnzo/DSW-Final-Transmisiones  
 **Deploy:** https://dsw-final-transmisiones.vercel.app  
+**Video explicativo:** https://drive.google.com/file/d/109EWEGwsBpWQyf5f-WfghVKki0z_a1Tp/view?usp=sharing  
+
+---
+
+## Pull Requests
+
+El desarrollo se realizó sobre la rama `main`; el registro de avance es el historial de commits detallado al final de este documento. Los ajustes finales previos a la entrega se integraron vía pull request:
+
+| Pull Request | Contenido |
+|---|---|
+| [#1](https://github.com/VeraEnzo/DSW-Final-Transmisiones/pull/1) | Backend: silenciado del log de errores esperados en los tests. Documentación: historial de commits completo y acta de la etapa de migración a Sequelize |
+
+Los issues del repositorio están habilitados para el seguimiento de la cátedra.
 
 ---
 
