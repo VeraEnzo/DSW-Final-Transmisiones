@@ -18,6 +18,12 @@
 
 ---
 
+## Video explicativo
+
+https://drive.google.com/file/d/109EWEGwsBpWQyf5f-WfghVKki0z_a1Tp/view?usp=sharing
+
+---
+
 ## Deploy
 
 **URL en producción:** https://dsw-final-transmisiones.vercel.app
