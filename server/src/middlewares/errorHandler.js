@@ -1,5 +1,7 @@
 const errorHandler = (err, req, res, next) => {
-  console.error(err);
+  // En los tests hay casos que provocan errores a propósito (ej. validación que
+  // debe fallar), así que no se loguean para no ensuciar la salida de Jest.
+  if (process.env.NODE_ENV !== 'test') console.error(err);
 
   if (err.name === 'ZodError') {
     return res.status(400).json({

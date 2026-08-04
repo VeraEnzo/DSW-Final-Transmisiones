@@ -91,3 +91,10 @@ El desarrollo se realizó en la rama `main` del repositorio. A continuación el 
 | 19/05/2026 | Deploy: migrate to Vercel + Render + Neon multicloud architecture |
 | 19/05/2026 | Fix: remove static frontend serving from Express |
 | 19/05/2026 | docs: update README with production URL and correct deploy stack |
+| 21/05/2026 | docs: add docs/README, propuesta, actas and reorganize documentation |
+| 30/07/2026 | feat(server): migrate data layer to Sequelize ORM |
+| 30/07/2026 | test(server): mock ESM PDF generator in presupuesto suite |
+| 30/07/2026 | docs: document Sequelize layer, fix PDF stack and add video script |
+| 30/07/2026 | chore: add CLAUDE.md with repo guidance for Claude Code |
+| 30/07/2026 | fix(fotos): evitar imágenes huérfanas en Cloudinary al fallar la subida |
+| 04/08/2026 | fix(server): silenciar el log de errores esperados durante los tests |

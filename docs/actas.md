@@ -2,7 +2,7 @@
 
 Registro cronológico del desarrollo del proyecto. Trabajo individual.  
 **Integrante:** Vera, Enzo  
-**Período:** Abril — Mayo 2026  
+**Período:** Abril — Agosto 2026  
 
 ---
 
@@ -88,3 +88,20 @@ Registro cronológico del desarrollo del proyecto. Trabajo individual.
 - Creación de documentación de la carpeta `docs/`
 
 **Resultado:** Sistema deployado y accesible en producción de forma gratuita e indefinida.
+
+---
+
+## Semana 7 — 30/07/2026 al 04/08/2026
+
+**Actividades:**
+- Migración de la capa de datos a **Sequelize (ORM)**: creación de `src/config/sequelize.js` como instancia compartida y de un modelo por tabla en `src/models/` (`Usuario`, `Cliente`, `Caja`, `Reparacion`, `ItemPresupuesto`, `ItemReparado`, `Foto`, `SolicitudReset`), con las asociaciones declaradas en `src/models/index.js`
+- Reescritura de los 8 controllers para consultar vía modelos en lugar de SQL crudo, manteniendo sin cambios la forma de las respuestas de la API (alias planos como `cliente_nombre` y `numero_serie` resueltos con `literal`/`fn`/`col`)
+- El esquema (`schema.sql`) se mantiene como fuente de verdad: los modelos mapean tablas existentes, no se usa `sequelize.sync()`
+- Ampliación del `errorHandler` para traducir los errores propios de Sequelize (validación → 400, unique → 409, foreign key → 400)
+- Mock del generador de PDF (ESM) en la suite de presupuesto para que los tests sigan corriendo bajo CommonJS
+- Corrección de un bug en la subida de fotos: la imagen se enviaba a Cloudinary antes de validar y antes del insert, por lo que un fallo posterior dejaba el archivo huérfano consumiendo cuota. Ahora se valida la etiqueta con Zod antes de subir y se borra el asset si el insert falla
+- Limpieza de los assets huérfanos que ya existían en Cloudinary
+- Silenciado del log de errores esperados durante los tests, para que la evidencia de ejecución quede legible
+- Verificación integral previa a la entrega: 26 tests de backend en verde, y validación de los flujos de autenticación, roles, CRUDs, filtros, PDF y dashboard contra la aplicación corriendo
+
+**Resultado:** Capa de datos sobre ORM sin cambios en el contrato de la API, bug de integridad con Cloudinary corregido y sistema verificado de punta a punta para la entrega final.
