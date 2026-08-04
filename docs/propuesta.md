@@ -16,6 +16,8 @@ El desarrollo se realizó sobre la rama `main`; el registro de avance es el hist
 | Pull Request | Contenido |
 |---|---|
 | [#1](https://github.com/VeraEnzo/DSW-Final-Transmisiones/pull/1) | Backend: silenciado del log de errores esperados en los tests. Documentación: historial de commits completo y acta de la etapa de migración a Sequelize |
+| [#2](https://github.com/VeraEnzo/DSW-Final-Transmisiones/pull/2) | Documentación: link al video explicativo, esta sección de pull requests y evidencia de ejecución de los tests de backend |
+| [#3](https://github.com/VeraEnzo/DSW-Final-Transmisiones/pull/3) | Documentación: contacto para coordinar la defensa |
 
 Los issues del repositorio están habilitados para el seguimiento de la cátedra.
 
