@@ -2,6 +2,8 @@
 
 Aplicación web PWA para gestionar reparaciones de cajas automáticas de vehículos pesados (camiones, colectivos, tractores). Permite llevar el control completo del taller: clientes, cajas, reparaciones, presupuestos en PDF y fotos. Realizado para el examen final de la materia **Desarrollo de Software - UTN FRRO**.
 
+**Integrante:** Vera, Enzo — **contacto para coordinar la defensa:** enzovera646@gmail.com
+
 ---
 
 ## Stack Técnico

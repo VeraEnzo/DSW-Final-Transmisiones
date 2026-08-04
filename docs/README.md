@@ -40,3 +40,9 @@ https://drive.google.com/file/d/109EWEGwsBpWQyf5f-WfghVKki0z_a1Tp/view?usp=shari
 ## Repositorio
 
 https://github.com/VeraEnzo/DSW-Final-Transmisiones
+
+---
+
+## Contacto
+
+**Integrante:** Vera, Enzo — enzovera646@gmail.com (contacto para coordinar la defensa)

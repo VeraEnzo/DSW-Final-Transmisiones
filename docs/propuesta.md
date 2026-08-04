@@ -5,6 +5,7 @@
 **Repositorio:** https://github.com/VeraEnzo/DSW-Final-Transmisiones  
 **Deploy:** https://dsw-final-transmisiones.vercel.app  
 **Video explicativo:** https://drive.google.com/file/d/109EWEGwsBpWQyf5f-WfghVKki0z_a1Tp/view?usp=sharing  
+**Contacto para coordinar la defensa:** enzovera646@gmail.com  
 
 ---
 
