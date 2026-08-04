@@ -9,6 +9,7 @@
 | Documento | Descripción |
 |---|---|
 | [Propuesta del Sistema](./propuesta.md) | Descripción del sistema, alcance, tecnologías y registro de avances |
+| [Modelo de Dominio / DER](./der.md) | Diagrama entidad-relación, entidades, cadena de dependencia y ciclo de vida |
 | [Actas de Avance](./actas.md) | Registro cronológico del desarrollo del proyecto |
 | [Documentación de la API](./api-docs.md) | Endpoints, parámetros y respuestas de la API REST |
 | [Tests Automatizados — Backend](./tests-automatizados.md) | Suite Jest + Supertest: casos, configuración y resultados |
